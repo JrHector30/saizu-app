@@ -1,0 +1,8 @@
+Model Information:
+* title:	Free Female Mannequin Base Mesh
+* source:	https://sketchfab.com/3d-models/free-female-mannequin-base-mesh-187300a221c04178b96b84bf9cab97e0
+* author:	Devlane (https://sketchfab.com/piyush20298)
+
+Model License:
+* license type:	SKETCHFAB Standard (https://sketchfab.com/licenses)
+* requirements:	Under basic restrictions, use worldwide, on all types of media, commercially or not, and in all types of derivative works
