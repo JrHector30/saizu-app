@@ -11,12 +11,17 @@ const getEmptyOutfitState = () => ({ head: {}, torso: {}, hands: {}, legs: {}, f
 const getEmptyInventorySchema = () => ({ head: [], torso: [], hands: [], legs: [], feet: [] });
 
 export const SuitcaseProvider = ({ children }) => {
-  const [activeOutfit, setActiveOutfit] = useState('ÉL'); // Managed by App/Onboarding mapped to user_profiles
-  const [activeZone, setActiveZone] = useState(null); // null means "home"
+  const [activeOutfit, setActiveOutfit] = useState('ÉL');
+  const [activeZone, setActiveZone] = useState(null);
+  const [activeZoneData, setActiveZoneData] = useState([]); 
   
   // NEW DYNAMIC PROFILES
   const [profilesList, setProfilesList] = useState([]);
   const [activeProfileId, setActiveProfileId] = useState(null);
+  
+  // -- SAÍZU NETWORK --
+  const [viewingFriend, setViewingFriend] = useState(null);
+  const [friendsList, setFriendsList] = useState([]);
   
   const [isSpinning, setIsSpinning] = useState(false);
   
@@ -175,8 +180,15 @@ export const SuitcaseProvider = ({ children }) => {
   const loadProfilesList = async () => {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
+
+    const targetOwnerId = viewingFriend ? viewingFriend.id : user.user.id;
+
     try {
-      const { data, error } = await supabase.from('outfit_profiles').select('*').order('created_at', { ascending: true });
+      const { data, error } = await supabase.from('outfit_profiles')
+        .select('*')
+        .eq('owner_id', targetOwnerId)
+        .order('created_at', { ascending: true });
+      
       if (error) throw error;
       setProfilesList(data || []);
       // Auto-select first if none is active and there's data
@@ -280,11 +292,34 @@ export const SuitcaseProvider = ({ children }) => {
   // Re-fetch automatically when active profile changes OR initial load
   useEffect(() => {
     loadActiveProfileData();
-  }, [activeProfileId]); // eslint-disable-line
+  }, [activeProfileId]);
+
+  useEffect(() => {
+    // Si cambia el viewingFriend (o vuelve a null), limpiamos el perfil activo para que seleccione el default del nuevo user
+    setActiveProfileId(null);
+    loadProfilesList();
+  }, [viewingFriend]);
 
   useEffect(() => {
     loadProfilesList();
   }, []);
+
+  // REALTIME SUBSCRIPTION ONLY
+  useEffect(() => {
+    if (!viewingFriend || !activeProfileId) return;
+
+    const channel = supabase.channel(`public:sizes_data:profile_id=eq.${activeProfileId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sizes_data', filter: `profile_id=eq.${activeProfileId}` }, payload => {
+        console.log("Realtime DB Change Received:", payload);
+        // Soft reload de la data
+        loadActiveProfileData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [viewingFriend, activeProfileId]);
 
   const saveProfileToSupabase = async () => {
     if (!activeProfileId) return alert("Selecciona un Perfil primero.");

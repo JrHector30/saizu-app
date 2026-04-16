@@ -33,13 +33,23 @@ const Onboarding = () => {
     const [hoverHe, setHoverHe] = useState(false);
     const [hoverShe, setHoverShe] = useState(false);
 
+    const generateSaizuId = () => {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let result = '';
+        for (let i = 0; i < 4; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return `SAI-${result}`;
+    };
+
     const selectProfile = async (outfit) => {
         setLoading(true);
         try {
             const { error } = await supabase.from('user_profiles').insert({
                 owner_id: session.user.id,
                 outfit_mode: outfit,
-                profile_name: 'Armario Principal'
+                profile_name: 'Armario Principal',
+                saizu_id: generateSaizuId()
             });
 
             if (error) throw error;

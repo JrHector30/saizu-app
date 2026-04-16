@@ -41,7 +41,7 @@ const CameraAnimator = ({ activeZone }) => {
 };
 
 const RenderMannequin = () => {
-  const { activeOutfit, activeZone, setActiveZone } = useSuitcase();
+  const { activeOutfit, activeZone, setActiveZone, viewingFriend } = useSuitcase();
 
   const isFemale = activeOutfit === 'ELLA';
   // Obtenemos el modelo correcto. El algoritmo AvatarModel escalará a todos equitativamente
@@ -58,7 +58,7 @@ const RenderMannequin = () => {
         
         <Suspense fallback={null}>
           <ModelErrorBoundary key={modelUrl} url={modelUrl}>
-             <AvatarModel url={modelUrl} />
+            <AvatarModel url={modelUrl} isHologram={!!viewingFriend} />
           </ModelErrorBoundary>
         </Suspense>
 

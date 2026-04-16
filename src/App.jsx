@@ -7,9 +7,10 @@ import { SuitcaseProvider, useSuitcase } from './context/SuitcaseContext';
 import RenderMannequin from './components/RenderMannequin';
 import EditorPanel from './components/EditorPanel';
 import ProfilesSidebar from './components/ProfilesSidebar';
+import UserMenu from './components/UserMenu';
 
 function MainInterface() {
-  const { activeZone, activeProfileId, setActiveOutfit } = useSuitcase();
+  const { activeZone, activeProfileId, setActiveOutfit, viewingFriend, setViewingFriend } = useSuitcase();
   const { profile } = useAuth();
 
   useEffect(() => {
@@ -31,15 +32,29 @@ function MainInterface() {
 
           {/* Center Space where the Avatar is (transparent) */}
           <div style={{ flex: 1, position: 'relative', pointerEvents: 'none' }}>
-             <header className="app-header" style={{ position: 'absolute', width: '100%', pointerEvents: 'auto' }}>
+             <header className="app-header" style={{ position: 'absolute', width: '100%', pointerEvents: 'none' }}>
                <h1 className="app-title">サイズ - Saizu</h1>
-               <button 
-                  onClick={() => supabase.auth.signOut()} 
-                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#FFFFFF', padding: '0.5rem 1rem', borderRadius: '12px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', pointerEvents: 'auto', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}
-               >
-                  Cerrar Sesión
-               </button>
+               <div style={{ pointerEvents: 'auto' }}>
+                 <UserMenu />
+               </div>
              </header>
+
+             {/* Botón flotante para regresar si estoy viendo a un amigo */}
+             {viewingFriend && (
+               <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 50, pointerEvents: 'auto' }}>
+                 <button 
+                   onClick={() => setViewingFriend(null)}
+                   style={{
+                     background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)',
+                     border: '1px solid rgba(255, 255, 255, 0.2)', padding: '0.8rem 1.5rem',
+                     borderRadius: '30px', color: '#fff', cursor: 'pointer',
+                     boxShadow: '0 8px 32px rgba(0,0,0,0.3)', fontWeight: 'bold'
+                   }}
+                 >
+                   Volver a mi Armario
+                 </button>
+               </div>
+             )}
 
              {/* Right Editor Panel */}
              <div className={`editor-wrapper ${activeZone ? 'slide-in' : 'slide-out'}`} style={{ pointerEvents: activeZone ? 'auto' : 'none' }}>

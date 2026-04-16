@@ -31,7 +31,7 @@ export class ModelErrorBoundary extends React.Component {
   }
 }
 
-const AvatarModel = ({ url, isHovered = false }) => {
+const AvatarModel = ({ url, isHovered = false, isHologram = false }) => {
   const { scene } = useGLTF(url);
   const avatarRef = useRef();
 
@@ -61,6 +61,33 @@ const AvatarModel = ({ url, isHovered = false }) => {
     scene.position.y += (-1.5 - newBox.min.y);
     
   }, [scene, url]);
+
+  useEffect(() => {
+    if (!scene) return;
+    scene.traverse((child) => {
+      if (child.isMesh) {
+        if (!child.userData.originalMaterial) {
+          child.userData.originalMaterial = child.material;
+        }
+        if (isHologram) {
+          if (!child.userData.hologramMaterial) {
+            child.userData.hologramMaterial = new THREE.MeshStandardMaterial({
+              color: '#ffffff',
+              emissive: '#ffffff',
+              emissiveIntensity: 0.4,
+              transparent: true,
+              opacity: 0.75,
+              metalness: 0.1,
+              roughness: 0.2
+            });
+          }
+          child.material = child.userData.hologramMaterial;
+        } else {
+          child.material = child.userData.originalMaterial;
+        }
+      }
+    });
+  }, [scene, isHologram]);
 
   useFrame(() => {
     if (avatarRef.current) {

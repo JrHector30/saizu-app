@@ -7,7 +7,7 @@ export const ICONS_MAP = {
 };
 
 const ProfilesSidebar = () => {
-  const { profilesList, activeProfileId, setActiveProfileId, createNewProfile, deleteProfile } = useSuitcase();
+  const { profilesList, activeProfileId, setActiveProfileId, createNewProfile, deleteProfile, viewingFriend } = useSuitcase();
   const [isCreating, setIsCreating] = useState(false);
   const [newProfileName, setNewProfileName] = useState('');
   const [selectedIcon, setSelectedIcon] = useState('Shirt');
@@ -36,7 +36,9 @@ const ProfilesSidebar = () => {
 
   return (
     <div className="profiles-sidebar glass-panel-dark">
-      <h2 className="sidebar-title">Mis Outfits</h2>
+      <h2 className="sidebar-title">
+        {viewingFriend ? `Armario de ${viewingFriend.saizu_id}` : 'Mis Outfits'}
+      </h2>
       
       <div className="profiles-list">
         {profilesList.map(profile => {
@@ -51,7 +53,7 @@ const ProfilesSidebar = () => {
                 <IconComponent size={18} opacity={activeProfileId === profile.id ? 1 : 0.6} />
                 <span className="profile-name">{profile.profile_name}</span>
               </div>
-              {activeProfileId !== profile.id && (
+              {activeProfileId !== profile.id && !viewingFriend && (
                 <button className="delete-profile-btn" onClick={(e) => handleDelete(e, profile.id)} title="Eliminar Perfil">
                   ✕
                 </button>
@@ -60,41 +62,43 @@ const ProfilesSidebar = () => {
           );
         })}
 
-        {isCreating ? (
-          <div className="profile-create-form glassmorphism-create" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
-              <input 
-                type="text" 
-                autoFocus 
-                placeholder="Ej. Verano..." 
-                value={newProfileName}
-                onChange={e => setNewProfileName(e.target.value)}
-                className="inline-create-input"
-                style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }}
-              />
-              <button type="button" onClick={handleCreateSubmit} className="confirm-btn mini" style={{ padding: '0 0.5rem', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', cursor: 'pointer' }}><Check size={16}/></button>
-              <button type="button" onClick={cancelCreation} className="cancel-btn mini" style={{ padding: '0 0.5rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer' }}><X size={16}/></button>
+        {!viewingFriend && (
+          isCreating ? (
+            <div className="profile-create-form glassmorphism-create" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', background: 'rgba(255,255,255,0.05)', padding: '1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input 
+                  type="text" 
+                  autoFocus 
+                  placeholder="Ej. Verano..." 
+                  value={newProfileName}
+                  onChange={e => setNewProfileName(e.target.value)}
+                  className="inline-create-input"
+                  style={{ flex: 1, padding: '0.5rem', marginBottom: 0 }}
+                />
+                <button type="button" onClick={handleCreateSubmit} className="confirm-btn mini" style={{ padding: '0 0.5rem', borderRadius: '8px', background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', cursor: 'pointer' }}><Check size={16}/></button>
+                <button type="button" onClick={cancelCreation} className="cancel-btn mini" style={{ padding: '0 0.5rem', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', cursor: 'pointer' }}><X size={16}/></button>
+              </div>
+              <div className="icon-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
+                {Object.keys(ICONS_MAP).map(iconKey => {
+                  const IconComp = ICONS_MAP[iconKey];
+                  return (
+                    <button 
+                      key={iconKey}
+                      type="button"
+                      onClick={() => setSelectedIcon(iconKey)}
+                      className={`icon-picker-btn ${selectedIcon === iconKey ? 'selected' : ''}`}
+                    >
+                      <IconComp size={18} />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="icon-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem' }}>
-              {Object.keys(ICONS_MAP).map(iconKey => {
-                const IconComp = ICONS_MAP[iconKey];
-                return (
-                  <button 
-                    key={iconKey}
-                    type="button"
-                    onClick={() => setSelectedIcon(iconKey)}
-                    className={`icon-picker-btn ${selectedIcon === iconKey ? 'selected' : ''}`}
-                  >
-                    <IconComp size={18} />
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ) : (
-          <button className="new-profile-btn" onClick={() => setIsCreating(true)}>
-            + Nuevo Perfil
-          </button>
+          ) : (
+            <button className="new-profile-btn" onClick={() => setIsCreating(true)}>
+              + Nuevo Perfil
+            </button>
+          )
         )}
       </div>
     </div>
