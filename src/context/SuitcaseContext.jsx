@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { WARDROBE_SCHEMA, COLOR_PALETTE, PATTERNS } from '../utils/wardrobeData';
+import { supabase } from '../lib/supabaseClient';
 
 const SuitcaseContext = createContext();
 
@@ -24,6 +25,7 @@ const deepCloneSchema = (schemaObj) => JSON.parse(JSON.stringify(schemaObj));
 export const SuitcaseProvider = ({ children }) => {
   const [activeOutfit, setActiveOutfit] = useState('ÉL');
   const [activeZone, setActiveZone] = useState(null); // null means "home"
+  const [activeCategory, setActiveCategory] = useState('CASUAL'); // Ej: CASUAL, FORMAL, SPORT
   
   // Mutable schema state to allow adding/removing schemas for items
   const [inventorySchema, setInventorySchema] = useState({
@@ -209,6 +211,95 @@ export const SuitcaseProvider = ({ children }) => {
     }
   };
 
+  // --- Funciones asíncronas para Supabase ---
+  const loadProfileFromSupabase = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return; // NoAuth 
+
+      const { data, error } = await supabase
+        .from('sizes_data')
+        .select('*')
+        .eq('category', activeCategory);
+        // NOTA: Para un filtrado perfecto del dueño, RLS ya lo filtra por ti.
+        // Pero idealmente filtraríamos también por activeOutfit si sizes_data incluye género, 
+        // pero según el schema nuevo, user_profiles define el outfit_mode. 
+        // Asumo que sizes_data simplemente lee Category.
+        
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+         const loadedData = generateOutfitState(WARDROBE_SCHEMA[activeOutfit]);
+         data.forEach(row => {
+            if (loadedData[row.zone] && loadedData[row.zone][row.item_id]) {
+               loadedData[row.zone][row.item_id] = {
+                  size: row.size_value || '',
+                  brands: row.brand || '',
+                  cut: row.extra_details?.cut || '',
+                  type: row.extra_details?.type || '',
+                  colors: row.extra_details?.colors || [],
+                  patterns: row.extra_details?.patterns || [],
+                  gallery: row.image_urls || []
+               };
+            }
+         });
+         setOutfitsData(prev => ({ ...prev, [activeOutfit]: loadedData }));
+      }
+    } catch (err) {
+      console.error("Error cargando perfil: ", err);
+    }
+  };
+
+  // Re-fetch automatically when category changes
+  useEffect(() => {
+    loadProfileFromSupabase();
+  }, [activeCategory, activeOutfit]);
+
+  const saveProfileToSupabase = async () => {
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) {
+        alert("Debes iniciar sesión con Supabase para guardar permanentemente.");
+        return;
+      }
+      
+      const userId = user.user.id;
+      const rows = [];
+      const currentOutfit = outfitsData[activeOutfit];
+
+      Object.keys(currentOutfit).forEach(zone => {
+         Object.keys(currentOutfit[zone]).forEach(itemId => {
+            const item = currentOutfit[zone][itemId];
+            if (item.size || item.brands || item.colors.length > 0 || item.gallery.length > 0) {
+               rows.push({
+                  owner_id: userId,
+                  category: activeCategory,
+                  zone: zone,
+                  item_id: itemId,
+                  size_value: item.size,
+                  brand: item.brands,
+                  image_urls: item.gallery,
+                  extra_details: { cut: item.cut, type: item.type, colors: item.colors, patterns: item.patterns }
+               });
+            }
+         });
+      });
+
+      if (rows.length === 0) return alert("Tu armario actual está vacío.");
+
+      // Limpia la categoría actual antes de hacer insert (simulando un overwrite)
+      await supabase.from('sizes_data').delete().eq('owner_id', userId).eq('category', activeCategory);
+
+      const { error } = await supabase.from('sizes_data').insert(rows);
+      if (error) throw error;
+      alert(`¡Outfit ${activeCategory} guardado con éxito!`);
+
+    } catch (err) {
+      console.error("Error guardando en Supabase: ", err);
+      alert("No se pudo guardar la selección.");
+    }
+  };
+
   return (
     <SuitcaseContext.Provider
       value={{
@@ -229,7 +320,9 @@ export const SuitcaseProvider = ({ children }) => {
         addItemOption,
         removeItemOption,
         addGlobalColor,
-        addGlobalPattern
+        addGlobalPattern,
+        saveProfileToSupabase,
+        loadProfileFromSupabase
       }}
     >
       {children}

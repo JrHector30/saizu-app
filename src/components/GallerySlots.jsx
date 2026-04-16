@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useSuitcase } from '../context/SuitcaseContext';
 import { convertToWebP } from '../utils/imageOptimizer';
+import { supabase } from '../lib/supabaseClient';
 import { Plus, X, Upload } from 'lucide-react';
 
 const GallerySlots = ({ itemId }) => {
@@ -19,11 +20,29 @@ const GallerySlots = ({ itemId }) => {
     if (!file) return;
 
     try {
-       const optimized = await convertToWebP(file, 0.85); 
-       addImageToItem(itemId, optimized);
+       // 1. Client-side local optimization a WebP
+       const { blob } = await convertToWebP(file, 0.85); 
+       
+       // 2. Generar Timestamp único
+       const timestamp = Date.now();
+       const fileName = `${timestamp}_${Math.random().toString(36).substring(7)}.webp`;
+       
+       // 3. Subir a Supabase
+       const { error: uploadError } = await supabase.storage
+         .from('saizu-gallery')
+         .upload(fileName, blob, { contentType: 'image/webp' });
+
+       if (uploadError) throw uploadError;
+
+       // 4. Extraer URL Pública y guardarla al estado
+       const { data: publicUrlData } = supabase.storage
+         .from('saizu-gallery')
+         .getPublicUrl(fileName);
+
+       addImageToItem(itemId, { url: publicUrlData.publicUrl, path: fileName });
     } catch (err) {
-      console.error("Error optimizing image:", err);
-      alert("No se pudo procesar la imagen. Intenta con otro archivo.");
+      console.error("Error optimizing/uploading image:", err);
+      alert("No se pudo procesar y subir la imagen. Intenta con otro archivo o verifica tu Auth.");
     }
 
     e.target.value = null;
