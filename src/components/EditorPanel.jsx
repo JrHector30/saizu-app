@@ -239,40 +239,42 @@ const EditorPanel = () => {
       </div>
 
       <div className="custom-item-creator">
-        {!viewingFriend && !isCreating ? (
-          <button className="add-new-btn" onClick={() => setIsCreating(true)}>
-            <Plus size={16} /> Agregar Nueva Prenda
-          </button>
-        ) : !viewingFriend && isCreating ? (
-          <div className="creation-form">
-            <input 
-              type="text" 
-              className="styled-input" 
-              placeholder="Nombre de prenda (Ej: Bufanda)"
-              value={newItemName}
-              onChange={e => setNewItemName(e.target.value)}
-              autoFocus
-            />
-            <p className="creation-subtitle">Selecciona los campos requeridos:</p>
-            <div className="attr-checkboxes">
-              {PRESET_ATTRS.map(attr => (
-                <label key={attr.id} className="attr-label">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedAttrs.includes(attr.id)}
-                    onChange={() => handleToggleAttr(attr.id)}
-                  />
-                  {attr.label}
-                </label>
-              ))}
+        {!viewingFriend && (
+          !isCreating ? (
+            <button className="add-new-btn" onClick={() => setIsCreating(true)}>
+              <Plus size={16} /> Agregar Nueva Prenda
+            </button>
+          ) : (
+            <div className="creation-form">
+              <input 
+                type="text" 
+                className="styled-input" 
+                placeholder="Nombre de prenda (Ej: Bufanda)"
+                value={newItemName}
+                onChange={e => setNewItemName(e.target.value)}
+                autoFocus
+              />
+              <p className="creation-subtitle">Selecciona los campos requeridos:</p>
+              <div className="attr-checkboxes">
+                {PRESET_ATTRS.map(attr => (
+                  <label key={attr.id} className="attr-label">
+                    <input 
+                      type="checkbox" 
+                      checked={selectedAttrs.includes(attr.id)}
+                      onChange={() => handleToggleAttr(attr.id)}
+                    />
+                    {attr.label}
+                  </label>
+                ))}
+              </div>
+              <div className="creation-actions">
+                <button className="cancel-btn" onClick={() => setIsCreating(false)}>Cancelar</button>
+                <button className="confirm-btn" onClick={handleCreateNew} disabled={!newItemName.trim()}>
+                  <Check size={16} /> Agregar
+                </button>
+              </div>
             </div>
-            <div className="creation-actions">
-              <button className="cancel-btn" onClick={() => setIsCreating(false)}>Cancelar</button>
-              <button className="confirm-btn" onClick={handleCreateNew} disabled={!newItemName.trim()}>
-                <Check size={16} /> Agregar
-              </button>
-            </div>
-          </div>
+          )
         )}
       </div>
       
