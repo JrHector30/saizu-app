@@ -19,6 +19,12 @@ export const AuthProvider = ({ children }) => {
         .single();
       
       if (!error && data) {
+        if (!data.saizu_id) {
+          const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+          const newId = `SAI-${randomHex}`;
+          await supabase.from('user_profiles').update({ saizu_id: newId }).eq('owner_id', userId);
+          data.saizu_id = newId;
+        }
         setProfile(data);
       } else {
         setProfile(null);
