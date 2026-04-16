@@ -1,44 +1,28 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { WARDROBE_SCHEMA, COLOR_PALETTE, PATTERNS } from '../utils/wardrobeData';
+import { COLOR_PALETTE, PATTERNS } from '../utils/wardrobeData';
 import { supabase } from '../lib/supabaseClient';
 
 const SuitcaseContext = createContext();
 
 export const useSuitcase = () => useContext(SuitcaseContext);
 
-// Generates the deep default state for an outfit based on a provided schema
-const generateOutfitState = (schema) => {
-  const outfitState = { head: {}, torso: {}, hands: {}, legs: {}, feet: {} };
-  Object.keys(schema).forEach(zone => {
-    schema[zone].forEach(item => {
-      outfitState[zone][item.id] = {
-        size: '', type: '', cut: '', brands: '', colors: [], patterns: [], gallery: []
-      };
-    });
-  });
-  return outfitState;
-};
-
-// Deep copy of the initial schema so we can mutate it freely
-const deepCloneSchema = (schemaObj) => JSON.parse(JSON.stringify(schemaObj));
+// Generates an absolutely empty schema layout
+const getEmptyOutfitState = () => ({ head: {}, torso: {}, hands: {}, legs: {}, feet: {} });
+const getEmptyInventorySchema = () => ({ head: [], torso: [], hands: [], legs: [], feet: [] });
 
 export const SuitcaseProvider = ({ children }) => {
-  const [activeOutfit, setActiveOutfit] = useState('ÉL');
+  const [activeOutfit, setActiveOutfit] = useState('ÉL'); // Managed by App/Onboarding mapped to user_profiles
   const [activeZone, setActiveZone] = useState(null); // null means "home"
-  const [activeCategory, setActiveCategory] = useState('CASUAL'); // Ej: CASUAL, FORMAL, SPORT
+  
+  // NEW DYNAMIC PROFILES
+  const [profilesList, setProfilesList] = useState([]);
+  const [activeProfileId, setActiveProfileId] = useState(null);
+  
   const [isSpinning, setIsSpinning] = useState(false);
   
-  // Mutable schema state to allow adding/removing schemas for items
-  const [inventorySchema, setInventorySchema] = useState({
-    'ÉL': deepCloneSchema(WARDROBE_SCHEMA['ÉL']),
-    'ELLA': deepCloneSchema(WARDROBE_SCHEMA['ELLA'])
-  });
-
-  // State for user-defined selections
-  const [outfitsData, setOutfitsData] = useState({
-    'ÉL': generateOutfitState(WARDROBE_SCHEMA['ÉL']),
-    'ELLA': generateOutfitState(WARDROBE_SCHEMA['ELLA']),
-  });
+  // They start completely empty
+  const [inventorySchema, setInventorySchema] = useState(getEmptyInventorySchema());
+  const [outfitsData, setOutfitsData] = useState(getEmptyOutfitState());
 
   // Shared Global Options State
   const [globalColors, setGlobalColors] = useState(COLOR_PALETTE);
@@ -46,12 +30,12 @@ export const SuitcaseProvider = ({ children }) => {
 
   const getActiveZoneData = () => {
     if (!activeZone) return null;
-    return outfitsData[activeOutfit][activeZone];
+    return outfitsData[activeZone];
   };
 
   const getActiveZoneSchema = () => {
     if (!activeZone) return null;
-    return inventorySchema[activeOutfit][activeZone];
+    return inventorySchema[activeZone];
   };
 
   // Field updater for selections
@@ -59,14 +43,11 @@ export const SuitcaseProvider = ({ children }) => {
     if (!activeZone) return;
     setOutfitsData(prev => ({
       ...prev,
-      [activeOutfit]: {
-        ...prev[activeOutfit],
-        [activeZone]: {
-          ...prev[activeOutfit][activeZone],
-          [itemId]: {
-            ...prev[activeOutfit][activeZone][itemId],
-            [field]: value
-          }
+      [activeZone]: {
+        ...prev[activeZone],
+        [itemId]: {
+          ...prev[activeZone][itemId],
+          [field]: value
         }
       }
     }));
@@ -76,23 +57,17 @@ export const SuitcaseProvider = ({ children }) => {
   const addCustomItem = (newItemSchema) => {
     if (!activeZone) return;
     
-    // 1. Add to schema definition
     setInventorySchema(prev => {
       const cloned = { ...prev };
-      cloned[activeOutfit] = { ...cloned[activeOutfit] };
-      cloned[activeOutfit][activeZone] = [...cloned[activeOutfit][activeZone], newItemSchema];
+      cloned[activeZone] = [...cloned[activeZone], newItemSchema];
       return cloned;
     });
 
-    // 2. Add to actual data state
     setOutfitsData(prev => ({
       ...prev,
-      [activeOutfit]: {
-        ...prev[activeOutfit],
-        [activeZone]: {
-          ...prev[activeOutfit][activeZone],
-          [newItemSchema.id]: { size: '', type: '', cut: '', brands: '', colors: [], patterns: [], gallery: [] }
-        }
+      [activeZone]: {
+        ...prev[activeZone],
+        [newItemSchema.id]: { size: '', type: '', cut: '', brands: '', colors: [], patterns: [], gallery: [] }
       }
     }));
   };
@@ -103,33 +78,28 @@ export const SuitcaseProvider = ({ children }) => {
     
     setInventorySchema(prev => {
       const cloned = { ...prev };
-      cloned[activeOutfit] = { ...cloned[activeOutfit] };
-      cloned[activeOutfit][activeZone] = cloned[activeOutfit][activeZone].filter(item => item.id !== itemId);
+      cloned[activeZone] = cloned[activeZone].filter(item => item.id !== itemId);
       return cloned;
     });
 
     setOutfitsData(prev => {
       const cloned = { ...prev };
-      cloned[activeOutfit] = { ...cloned[activeOutfit] };
-      cloned[activeOutfit][activeZone] = { ...cloned[activeOutfit][activeZone] };
-      delete cloned[activeOutfit][activeZone][itemId];
+      cloned[activeZone] = { ...cloned[activeZone] };
+      delete cloned[activeZone][itemId];
       return cloned;
     });
   };
 
-  // Dynamic Options: Add a new option (size, type, cut) to an item's schema
+  // Dynamic Options: Add a new option
   const addItemOption = (itemId, optField, newValue) => {
     if (!activeZone) return;
     
     setInventorySchema(prev => {
       const cloned = { ...prev };
-      cloned[activeOutfit] = { ...cloned[activeOutfit] };
-      cloned[activeOutfit][activeZone] = cloned[activeOutfit][activeZone].map(item => {
+      cloned[activeZone] = cloned[activeZone].map(item => {
         if (item.id === itemId) {
           const updatedItem = { ...item };
           if (!updatedItem[optField]) updatedItem[optField] = [];
-          
-          // Avoid duplicates
           if (!updatedItem[optField].includes(newValue)) {
             updatedItem[optField] = [...updatedItem[optField], newValue];
           }
@@ -140,8 +110,6 @@ export const SuitcaseProvider = ({ children }) => {
       return cloned;
     });
     
-    // Auto-select the newly added option
-    // By convention optField -> 'sizeOpts' updates 'size'
     const dataFieldMap = { 'sizeOpts': 'size', 'typeOpts': 'type', 'cutOpts': 'cut' };
     if (dataFieldMap[optField]) {
       updateItemData(itemId, dataFieldMap[optField], newValue);
@@ -150,32 +118,24 @@ export const SuitcaseProvider = ({ children }) => {
 
   const removeItemOption = (itemId, optField, currentOptionsArray, valueToRemove) => {
     if (!activeZone) return;
-    
     const newArray = currentOptionsArray.filter(v => v !== valueToRemove);
-    
     setInventorySchema(prev => {
       const cloned = { ...prev };
-      cloned[activeOutfit] = { ...cloned[activeOutfit] };
-      cloned[activeOutfit][activeZone] = cloned[activeOutfit][activeZone].map(item => {
-        if (item.id === itemId) {
-          return { ...item, [optField]: newArray };
-        }
+      cloned[activeZone] = cloned[activeZone].map(item => {
+        if (item.id === itemId) return { ...item, [optField]: newArray };
         return item;
       });
       return cloned;
     });
-    
-    // Clear the selection if it was the deleted value
     const dataFieldMap = { 'sizeOpts': 'size', 'typeOpts': 'type', 'cutOpts': 'cut' };
     if (dataFieldMap[optField]) {
       const field = dataFieldMap[optField];
-      if (outfitsData[activeOutfit][activeZone][itemId][field] === valueToRemove) {
+      if (outfitsData[activeZone][itemId][field] === valueToRemove) {
         updateItemData(itemId, field, '');
       }
     }
   };
 
-  // Global Option Adding
   const addGlobalColor = (name, hex) => {
     const defaultColorId = name.toLowerCase().replace(/[^a-z0-9]/g, '');
     setGlobalColors(prev => [...prev, { id: defaultColorId, hex, label: name }]);
@@ -189,22 +149,21 @@ export const SuitcaseProvider = ({ children }) => {
 
   const addImageToItem = (itemId, imageData) => {
     if (!activeZone) return;
-    const currentImages = outfitsData[activeOutfit][activeZone][itemId]?.gallery || [];
+    const currentImages = outfitsData[activeZone][itemId]?.gallery || [];
     if (currentImages.length >= 3) return;
     updateItemData(itemId, 'gallery', [...currentImages, imageData]);
   };
 
   const removeImageFromItem = (itemId, index) => {
     if (!activeZone) return;
-    const currentImages = [...(outfitsData[activeOutfit][activeZone][itemId]?.gallery || [])];
+    const currentImages = [...(outfitsData[activeZone][itemId]?.gallery || [])];
     currentImages.splice(index, 1);
     updateItemData(itemId, 'gallery', currentImages);
   };
 
   const toggleMultiSelect = (itemId, field, selectionId) => {
-    if (!activeZone || !outfitsData[activeOutfit][activeZone][itemId]) return;
-    const currentArray = outfitsData[activeOutfit][activeZone][itemId][field] || [];
-    
+    if (!activeZone || !outfitsData[activeZone][itemId]) return;
+    const currentArray = outfitsData[activeZone][itemId][field] || [];
     if (currentArray.includes(selectionId)) {
       updateItemData(itemId, field, currentArray.filter(i => i !== selectionId));
     } else {
@@ -212,92 +171,170 @@ export const SuitcaseProvider = ({ children }) => {
     }
   };
 
-  // --- Funciones asíncronas para Supabase ---
-  const loadProfileFromSupabase = async () => {
+  // --- NUEVA LÓGICA DE PERFILES ---
+  const loadProfilesList = async () => {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) return;
     try {
-      const { data: user } = await supabase.auth.getUser();
-      if (!user.user) return; // NoAuth 
-
-      const { data, error } = await supabase
-        .from('sizes_data')
-        .select('*')
-        .eq('category', activeCategory);
-        // NOTA: Para un filtrado perfecto del dueño, RLS ya lo filtra por ti.
-        // Pero idealmente filtraríamos también por activeOutfit si sizes_data incluye género, 
-        // pero según el schema nuevo, user_profiles define el outfit_mode. 
-        // Asumo que sizes_data simplemente lee Category.
-        
+      const { data, error } = await supabase.from('outfit_profiles').select('*').order('created_at', { ascending: true });
       if (error) throw error;
-
-      if (data && data.length > 0) {
-         const loadedData = generateOutfitState(WARDROBE_SCHEMA[activeOutfit]);
-         data.forEach(row => {
-            if (loadedData[row.zone] && loadedData[row.zone][row.item_id]) {
-               loadedData[row.zone][row.item_id] = {
-                  size: row.size_value || '',
-                  brands: row.brand || '',
-                  cut: row.extra_details?.cut || '',
-                  type: row.extra_details?.type || '',
-                  colors: row.extra_details?.colors || [],
-                  patterns: row.extra_details?.patterns || [],
-                  gallery: row.image_urls || []
-               };
-            }
-         });
-         setOutfitsData(prev => ({ ...prev, [activeOutfit]: loadedData }));
+      setProfilesList(data || []);
+      // Auto-select first if none is active and there's data
+      if (data && data.length > 0 && !activeProfileId) {
+        setActiveProfileId(data[0].id);
+      } else if (data && data.length === 0) {
+        // If they literally have zero profiles, clear active
+        setActiveProfileId(null);
       }
-    } catch (err) {
-      console.error("Error cargando perfil: ", err);
+    } catch (e) {
+      console.error("Error fetching profiles:", e);
     }
   };
 
-  // Re-fetch automatically when category changes
+  const createNewProfile = async (profileName) => {
+    const { data: user } = await supabase.auth.getUser();
+    if (!user.user) return;
+    try {
+      const { data, error } = await supabase.from('outfit_profiles').insert({
+        owner_id: user.user.id,
+        profile_name: profileName
+      }).select().single();
+      
+      if (error) throw error;
+      setProfilesList(prev => [...prev, data]);
+      setActiveProfileId(data.id);
+    } catch (e) {
+      console.error("Error creating profile:", e);
+      alert("No se pudo crear el perfil.");
+    }
+  };
+
+  const deleteProfile = async (profileId) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este perfil? Esto borrará todas las prendas dentro.")) return;
+    try {
+      const { error } = await supabase.from('outfit_profiles').delete().eq('id', profileId);
+      if (error) throw error;
+      
+      setProfilesList(prev => prev.filter(p => p.id !== profileId));
+      if (activeProfileId === profileId) {
+        setActiveProfileId(null); 
+      }
+    } catch (e) {
+      console.error("Error deleting profile:", e);
+    }
+  };
+
+  const loadActiveProfileData = async () => {
+    setInventorySchema(getEmptyInventorySchema());
+    setOutfitsData(getEmptyOutfitState());
+
+    if (!activeProfileId) return;
+
+    // Animación del maniquí girando al cambiar perfil
+    setIsSpinning(true);
+    setTimeout(() => setIsSpinning(false), 1500);
+
+    try {
+      const { data, error } = await supabase.from('sizes_data').select('*').eq('profile_id', activeProfileId);
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+         let newSchema = getEmptyInventorySchema();
+         let newData = getEmptyOutfitState();
+         
+         data.forEach(row => {
+            const z = row.zone;
+            if (!newSchema[z]) return;
+
+            // Reconstruimos el custom item en base a lo guardado
+            const reconstructedItem = {
+               id: row.item_id,
+               label: row.extra_details?.label || 'Prenda',
+               icon: row.extra_details?.icon || '🛍️',
+               sizeOpts: row.extra_details?.sizeOpts || [],
+               typeOpts: row.extra_details?.typeOpts || [],
+               cutOpts: row.extra_details?.cutOpts || []
+            };
+            newSchema[z].push(reconstructedItem);
+
+            // Reconstruimos la state data
+            newData[z][row.item_id] = {
+               size: row.size_value || '',
+               brands: row.brand || '',
+               cut: row.extra_details?.cut || '',
+               type: row.extra_details?.type || '',
+               colors: row.extra_details?.colors || [],
+               patterns: row.extra_details?.patterns || [],
+               gallery: row.image_urls || []
+            };
+         });
+         setInventorySchema(newSchema);
+         setOutfitsData(newData);
+      }
+    } catch (err) {
+      console.error("Error cargando prendas del perfil: ", err);
+    }
+  };
+
+  // Re-fetch automatically when active profile changes OR initial load
   useEffect(() => {
-    loadProfileFromSupabase();
-  }, [activeCategory, activeOutfit]);
+    loadActiveProfileData();
+  }, [activeProfileId]); // eslint-disable-line
+
+  useEffect(() => {
+    loadProfilesList();
+  }, []);
 
   const saveProfileToSupabase = async () => {
+    if (!activeProfileId) return alert("Selecciona un Perfil primero.");
     try {
       const { data: user } = await supabase.auth.getUser();
-      if (!user.user) {
-        alert("Debes iniciar sesión con Supabase para guardar permanentemente.");
-        return;
-      }
+      if (!user.user) return;
       
       const userId = user.user.id;
       const rows = [];
-      const currentOutfit = outfitsData[activeOutfit];
 
-      Object.keys(currentOutfit).forEach(zone => {
-         Object.keys(currentOutfit[zone]).forEach(itemId => {
-            const item = currentOutfit[zone][itemId];
+      Object.keys(outfitsData).forEach(zone => {
+         Object.keys(outfitsData[zone]).forEach(itemId => {
+            const item = outfitsData[zone][itemId];
+            const schemaDef = inventorySchema[zone].find(x => x.id === itemId);
             if (item.size || item.brands || item.colors.length > 0 || item.gallery.length > 0) {
                rows.push({
                   owner_id: userId,
-                  category: activeCategory,
+                  profile_id: activeProfileId, // Vinculo esencial
                   zone: zone,
                   item_id: itemId,
                   size_value: item.size,
                   brand: item.brands,
                   image_urls: item.gallery,
-                  extra_details: { cut: item.cut, type: item.type, colors: item.colors, patterns: item.patterns }
+                  extra_details: { 
+                    cut: item.cut, 
+                    type: item.type, 
+                    colors: item.colors, 
+                    patterns: item.patterns,
+                    label: schemaDef?.label || 'Prenda',
+                    icon: schemaDef?.icon || '🛍️',
+                    sizeOpts: schemaDef?.sizeOpts || [],
+                    typeOpts: schemaDef?.typeOpts || [],
+                    cutOpts: schemaDef?.cutOpts || []
+                  }
                });
             }
          });
       });
 
-      if (rows.length === 0) return alert("Tu armario actual está vacío.");
+      // Limpia todo este profile antes de insertar (simulando upsert completo por delete-insert)
+      await supabase.from('sizes_data').delete().eq('profile_id', activeProfileId);
 
-      // Limpia la categoría actual antes de hacer insert (simulando un overwrite)
-      await supabase.from('sizes_data').delete().eq('owner_id', userId).eq('category', activeCategory);
-
-      const { error } = await supabase.from('sizes_data').insert(rows);
-      if (error) throw error;
-      alert(`¡Outfit ${activeCategory} guardado con éxito!`);
+      if (rows.length > 0) {
+        const { error } = await supabase.from('sizes_data').insert(rows);
+        if (error) throw error;
+      }
+      
+      alert(`¡Perfil guardado con éxito!`);
 
     } catch (err) {
       console.error("Error guardando en Supabase: ", err);
-      alert("No se pudo guardar la selección.");
     }
   };
 
@@ -325,7 +362,12 @@ export const SuitcaseProvider = ({ children }) => {
         addGlobalColor,
         addGlobalPattern,
         saveProfileToSupabase,
-        loadProfileFromSupabase
+        // Profiles Exposes
+        profilesList,
+        activeProfileId,
+        setActiveProfileId,
+        createNewProfile,
+        deleteProfile 
       }}
     >
       {children}

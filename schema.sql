@@ -14,11 +14,25 @@ CREATE POLICY "Lectura publica profiles" ON public.user_profiles FOR SELECT USIN
 CREATE POLICY "Insertar profiles a dueños" ON public.user_profiles FOR INSERT WITH CHECK (auth.uid() = owner_id);
 CREATE POLICY "Mutación profiles a dueños" ON public.user_profiles FOR ALL USING (auth.uid() = owner_id);
 
--- 2. Tabla de Datos de Medidas (sizes_data)
+-- 2. Tabla Secundaria de Perfiles de Ropa (Outfit Profiles)
+CREATE TABLE IF NOT EXISTS public.outfit_profiles (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+    profile_name TEXT NOT NULL,
+    icon TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
+ALTER TABLE public.outfit_profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Dueños ven sus outfit profiles" ON public.outfit_profiles FOR SELECT USING (auth.uid() = owner_id);
+CREATE POLICY "Insertar outfit profiles a dueños" ON public.outfit_profiles FOR INSERT WITH CHECK (auth.uid() = owner_id);
+CREATE POLICY "Mutación outfit profiles a dueños" ON public.outfit_profiles FOR ALL USING (auth.uid() = owner_id);
+
+-- 3. Tabla de Datos de Medidas (sizes_data)
 CREATE TABLE IF NOT EXISTS public.sizes_data (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE, -- Relacion directa
-    category TEXT NOT NULL, -- CASUAL, FORMAL, SPORT...
+    profile_id UUID NOT NULL REFERENCES public.outfit_profiles(id) ON DELETE CASCADE, -- Ej. Vinculado a "Verano"
     zone TEXT NOT NULL, 
     item_id TEXT NOT NULL,
     brand TEXT,

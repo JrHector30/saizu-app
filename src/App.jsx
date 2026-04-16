@@ -6,43 +6,47 @@ import Onboarding from './components/Onboarding';
 import { SuitcaseProvider, useSuitcase } from './context/SuitcaseContext';
 import RenderMannequin from './components/RenderMannequin';
 import EditorPanel from './components/EditorPanel';
-
-// OutfitToggle is removed as the dashboard only renders the chosen 3D model
+import ProfilesSidebar from './components/ProfilesSidebar';
 
 function MainInterface() {
-  const { activeZone, setActiveOutfit, setIsSpinning } = useSuitcase();
+  const { activeZone, activeProfileId, setActiveOutfit } = useSuitcase();
   const { profile } = useAuth();
 
   useEffect(() => {
     if (profile) {
       setActiveOutfit(profile.outfit_mode);
-      setIsSpinning(false);
     }
-  }, [profile, setActiveOutfit, setIsSpinning]);
+  }, [profile, setActiveOutfit]);
 
   return (
     <div className="main-wrapper">
-      {/* 3D Render Background Layer */}
       <RenderMannequin />
 
       { !profile ? (
         <Onboarding />
       ) : (
-        <div className="ui-layer">
-          <header className="app-header" style={{ position: 'relative' }}>
-            <h1 className="app-title">サイズ - Saizu</h1>
-            <button 
-               onClick={() => supabase.auth.signOut()} 
-               style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: '1px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem' }}
-            >
-               Cerrar Sesión
-            </button>
-          </header>
+        <div className="ui-layer" style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' }}>
+          
+          <ProfilesSidebar />
 
-          {/* Editor Panel only visible when a zone is active */}
-          <div className={`editor-wrapper ${activeZone ? 'slide-in' : 'slide-out'}`}>
-            {activeZone && <EditorPanel />}
+          {/* Center Space where the Avatar is (transparent) */}
+          <div style={{ flex: 1, position: 'relative' }}>
+             <header className="app-header" style={{ position: 'absolute', width: '100%' }}>
+               <h1 className="app-title">サイズ - Saizu</h1>
+               <button 
+                  onClick={() => supabase.auth.signOut()} 
+                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: '1px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem' }}
+               >
+                  Cerrar Sesión
+               </button>
+             </header>
+
+             {/* Right Editor Panel */}
+             <div className={`editor-wrapper ${activeZone ? 'slide-in' : 'slide-out'}`}>
+               {activeZone && <EditorPanel />}
+             </div>
           </div>
+
         </div>
       )}
     </div>
