@@ -35,7 +35,7 @@ function MainInterface() {
                <h1 className="app-title">サイズ - Saizu</h1>
                <button 
                   onClick={() => supabase.auth.signOut()} 
-                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: '1px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', pointerEvents: 'auto' }}
+                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.1)', color: '#FFFFFF', padding: '0.5rem 1rem', borderRadius: '12px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', pointerEvents: 'auto', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)' }}
                >
                   Cerrar Sesión
                </button>
