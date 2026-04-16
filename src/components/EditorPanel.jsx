@@ -3,7 +3,7 @@ import { useSuitcase } from '../context/SuitcaseContext';
 import GallerySlots from './GallerySlots';
 import ColorSwatchPicker from './ColorSwatchPicker';
 import PatternPicker from './PatternPicker';
-import { X, ChevronDown, ChevronUp, Trash2, Plus, Check } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Trash2, Plus, Check, Pencil } from 'lucide-react';
 
 const zoneTranslations = {
   head: 'Cabeza y Rostro',
@@ -77,8 +77,13 @@ const OptionsSelector = ({ label, options, selectedValue, onSelect, onAdd, onRem
 }
 
 const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend }) => {
-  const { activeZoneData, updateItemData, addItemOption, removeItemOption } = useSuitcase();
+  const { activeZoneData, updateItemData, addItemOption, removeItemOption, saveSingleItemToSupabase, activeZone } = useSuitcase();
   const itemState = activeZoneData[itemConfig.id];
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+
+  const localReadOnly = viewingFriend || !isEditing;
 
   if (!itemState) return null; // Failsafe
 
@@ -92,17 +97,26 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
         <span>{itemConfig.label}</span>
         <div className="accordion-actions">
           {!viewingFriend && (
-            <Trash2 
-              size={16} 
-              className="delete-icon" 
-              onClick={(e) => { e.stopPropagation(); onDelete(itemConfig.id); }} 
-            />
+            <>
+              <Pencil 
+                size={16} 
+                className="edit-icon" 
+                onClick={(e) => { e.stopPropagation(); setIsEditing(!isEditing); }} 
+                style={{ cursor: 'pointer', opacity: isEditing ? 1 : 0.6 }}
+              />
+              <Trash2 
+                size={16} 
+                className="delete-icon" 
+                onClick={(e) => { e.stopPropagation(); onDelete(itemConfig.id); }} 
+                style={{ cursor: 'pointer' }}
+              />
+            </>
           )}
           {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
       </button>
       {isOpen && (
-        <div className="accordion-content" style={{ pointerEvents: viewingFriend ? 'none' : 'auto' }}>
+        <div className="accordion-content" style={{ opacity: localReadOnly ? 0.7 : 1, pointerEvents: localReadOnly ? 'none' : 'auto' }}>
           {itemConfig.attrs.includes('size') && (
             <OptionsSelector 
               label="Talla" 
@@ -111,7 +125,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
               onSelect={(val) => updateItemData(itemConfig.id, 'size', val === itemState.size ? '' : val)} 
               onAdd={(val) => addItemOption(itemConfig.id, 'sizeOpts', val)} 
               onRemove={(val) => removeItemOption(itemConfig.id, 'sizeOpts', sizes, val)} 
-              readOnly={!!viewingFriend}
+              readOnly={localReadOnly}
             />
           )}
 
@@ -123,7 +137,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
               onSelect={(val) => updateItemData(itemConfig.id, 'type', val === itemState.type ? '' : val)} 
               onAdd={(val) => addItemOption(itemConfig.id, 'typeOpts', val)} 
               onRemove={(val) => removeItemOption(itemConfig.id, 'typeOpts', types, val)} 
-              readOnly={!!viewingFriend}
+              readOnly={localReadOnly}
             />
           )}
 
@@ -135,7 +149,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
               onSelect={(val) => updateItemData(itemConfig.id, 'cut', val === itemState.cut ? '' : val)} 
               onAdd={(val) => addItemOption(itemConfig.id, 'cutOpts', val)} 
               onRemove={(val) => removeItemOption(itemConfig.id, 'cutOpts', cuts, val)} 
-              readOnly={!!viewingFriend}
+              readOnly={localReadOnly}
             />
           )}
 
@@ -148,7 +162,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
                 value={itemState.brands || ''}
                 onChange={(e) => updateItemData(itemConfig.id, 'brands', e.target.value)}
                 className="styled-input"
-                readOnly={!!viewingFriend}
+                readOnly={localReadOnly}
               />
             </div>
           )}
@@ -171,6 +185,44 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             <div className="gallery-section">
               <label>Fotos de Referencia</label>
               <GallerySlots itemId={itemConfig.id} />
+            </div>
+          )}
+          
+          {isEditing && (
+            <div className="accordion-footer" style={{ marginTop: '1.5rem', pointerEvents: 'auto' }}>
+              <button 
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  setIsSaving(true);
+                  const success = await saveSingleItemToSupabase(activeZone, itemConfig.id);
+                  setIsSaving(false);
+                  if(success) {
+                    setIsEditing(false);
+                    setJustSaved(true);
+                    setTimeout(() => setJustSaved(false), 2000);
+                  }
+                }}
+                disabled={isSaving}
+                style={{
+                  width: '100%',
+                  background: '#111',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  padding: '1rem',
+                  borderRadius: '12px',
+                  cursor: 'pointer',
+                  fontWeight: '600',
+                  letterSpacing: '1px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.5rem',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                {isSaving ? 'GUARDANDO...' : justSaved ? <><Check size={18} color="#4ade80" /> GUARDADO EXITOSAMENTE</> : 'GUARDAR CAMBIOS PRENDA'}
+              </button>
             </div>
           )}
         </div>

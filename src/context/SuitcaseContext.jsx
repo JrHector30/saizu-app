@@ -321,6 +321,53 @@ export const SuitcaseProvider = ({ children }) => {
     };
   }, [viewingFriend, activeProfileId]);
 
+  const saveSingleItemToSupabase = async (zone, itemId) => {
+    if (!activeProfileId) return false;
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (!user.user) return false;
+      
+      const userId = user.user.id;
+      const item = outfitsData[zone][itemId];
+      const schemaDef = inventorySchema[zone].find(x => x.id === itemId);
+
+      const row = {
+         owner_id: userId,
+         profile_id: activeProfileId,
+         zone: zone,
+         item_id: itemId,
+         size_value: item.size || null,
+         brand: item.brands || null,
+         image_urls: item.gallery || [],
+         extra_details: { 
+           cut: item.cut, 
+           type: item.type, 
+           colors: item.colors, 
+           patterns: item.patterns,
+           label: schemaDef?.label || 'Prenda',
+           icon: schemaDef?.icon || '🛍️',
+           sizeOpts: schemaDef?.sizeOpts || [],
+           typeOpts: schemaDef?.typeOpts || [],
+           cutOpts: schemaDef?.cutOpts || []
+         }
+      };
+
+      // Limpia solo el item específico antes de recrear (Upsert sin PK)
+      await supabase.from('sizes_data').delete()
+        .eq('profile_id', activeProfileId)
+        .eq('zone', zone)
+        .eq('item_id', itemId);
+
+      const { error } = await supabase.from('sizes_data').insert([row]);
+      if (error) throw error;
+      
+      return true;
+    } catch (err) {
+      console.error("Error guardando item en Supabase: ", err);
+      return false;
+    }
+  };
+
   const saveProfileToSupabase = async () => {
     if (!activeProfileId) return alert("Selecciona un Perfil primero.");
     try {
@@ -398,6 +445,9 @@ export const SuitcaseProvider = ({ children }) => {
         addGlobalColor,
         addGlobalPattern,
         saveProfileToSupabase,
+        saveSingleItemToSupabase,
+        viewingFriend,
+        setViewingFriend,
         // Profiles Exposes
         profilesList,
         activeProfileId,
