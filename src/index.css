@@ -875,10 +875,18 @@ h1, h2, h3, h4, h5, h6 {
 /* The 3D Canvas sits absolute covering the entire half */
 .onboarding-canvas-container {
   position: absolute;
-  inset: 0;
+  inset: -10px; /* Expansión para prevenir bordes translúcidos por el blur */
   z-index: 1;
   pointer-events: none; /* Let clicks pass through to to panel below/btn */
-  transition: filter 0.5s ease;
+  transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  filter: blur(15px) opacity(0.6); /* Fuerte difuminado por defecto */
+  transform: scale(1.05); /* Ligeramente más grande para amortiguar el blur edge */
+}
+
+/* HOVER STATE PARA EL FONDO DEL PANEL */
+.onboarding-panel:hover .onboarding-canvas-container {
+  filter: blur(0px) opacity(1);
+  transform: scale(1);
 }
 
 /* The Glass Button sits on top */
@@ -902,10 +910,10 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none; /* The actual hover is handled by the parent `.onboarding-panel` */
 }
 
-/* HOVER STATE EN EL CONTENEDOR */
+/* HOVER STATE EN EL BOTÓN VIDRIO */
 .onboarding-panel:hover .glass-btn {
   background: rgba(255, 255, 255, 0.4);
-  backdrop-filter: blur(6px); /* Reveal the model clearly */
+  backdrop-filter: blur(6px); /* Reveal the model clearly through the button too */
   -webkit-backdrop-filter: blur(6px);
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
   border-color: rgba(255, 255, 255, 0.8);

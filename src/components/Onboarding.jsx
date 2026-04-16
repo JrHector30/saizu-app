@@ -8,7 +8,7 @@ import AvatarModel, { ModelErrorBoundary } from './AvatarModel';
 const ModelBackground = ({ url, isHovered }) => {
     return (
         <div className="onboarding-canvas-container">
-            <Canvas shadows camera={{ position: [0, 0, 5], fov: 40 }}>
+            <Canvas shadows camera={{ position: [0, 0.5, 7.5], fov: 45 }}>
                 <Environment preset="city" />
                 <ambientLight intensity={0.5} />
                 <directionalLight castShadow position={[2, 5, 2]} intensity={1} shadow-mapSize={[1024, 1024]} />
