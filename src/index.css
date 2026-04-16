@@ -846,48 +846,70 @@ h1, h2, h3, h4, h5, h6 {
   text-decoration: underline;
 }
 
-/* Onboarding Transparent Glass Wall */
-.onboarding-overlay {
+/* Onboarding Wrapper: Fixed overlay holding 2 halves */
+.onboarding-wrapper {
   position: absolute;
   inset: 0;
-  z-index: 50; /* Over everything except maybe modals */
+  z-index: 50; 
   display: flex;
-  pointer-events: auto; /* Catch all clicks */
+  pointer-events: auto;
+  background: white; /* Base background so they don't see the app behind */
 }
 
-.glass-wall {
-  background: rgba(255, 255, 255, 0.1); /* Very slight tint over Render */
-  backdrop-filter: blur(2px); /* Let the 3D model shine through, but softer */
-}
-
-.onboarding-half {
+/* Each Panel spans 50% */
+.onboarding-panel {
   flex: 1;
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.4s ease, backdrop-filter 0.4s ease;
   cursor: pointer;
+  overflow: hidden;
+  border-right: 1px solid rgba(0,0,0,0.05);
 }
 
-.onboarding-half:hover {
-  background: rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(0px); /* Unblur on hover for clarity of the model */
+.onboarding-panel.panel-right {
+  border-right: none;
 }
 
-.onboarding-btn {
+/* The 3D Canvas sits absolute covering the entire half */
+.onboarding-canvas-container {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none; /* Let clicks pass through to to panel below/btn */
+  transition: filter 0.5s ease;
+}
+
+/* The Glass Button sits on top */
+.glass-btn {
+  position: relative;
+  z-index: 10;
   font-family: var(--font-title);
-  font-size: 3rem;
-  color: var(--text-main);
-  background: rgba(255, 255, 255, 0.9);
-  padding: 2rem 4rem;
-  border-radius: 12px;
-  box-shadow: var(--shadow-lg);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-  pointer-events: none; /* Let the container handle the hover/click */
+  font-size: 2.5rem;
+  color: #000000;
+  padding: 2.5rem 5rem;
+  border-radius: 20px;
+  
+  /* Glassmorphism base */
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
+  
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none; /* The actual hover is handled by the parent `.onboarding-panel` */
 }
 
-.onboarding-half:hover .onboarding-btn {
-  transform: scale(1.1);
+/* HOVER STATE EN EL CONTENEDOR */
+.onboarding-panel:hover .glass-btn {
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px); /* Reveal the model clearly */
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.1);
+  border-color: rgba(255, 255, 255, 0.8);
+  transform: translateY(-5px) scale(1.02);
 }
 
 .onboarding-loading {
