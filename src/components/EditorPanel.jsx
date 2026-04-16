@@ -101,8 +101,6 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
           {isOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </div>
       </button>
-
-      {isOpen && (
       {isOpen && (
         <div className="accordion-content" style={{ pointerEvents: viewingFriend ? 'none' : 'auto' }}>
           {itemConfig.attrs.includes('size') && (
