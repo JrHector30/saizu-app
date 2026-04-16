@@ -191,13 +191,14 @@ export const SuitcaseProvider = ({ children }) => {
     }
   };
 
-  const createNewProfile = async (profileName) => {
+  const createNewProfile = async (profileName, iconName = 'Package') => {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
     try {
       const { data, error } = await supabase.from('outfit_profiles').insert({
         owner_id: user.user.id,
-        profile_name: profileName
+        profile_name: profileName,
+        icon: iconName
       }).select().single();
       
       if (error) throw error;
