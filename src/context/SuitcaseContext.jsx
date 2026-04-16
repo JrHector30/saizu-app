@@ -26,6 +26,7 @@ export const SuitcaseProvider = ({ children }) => {
   const [activeOutfit, setActiveOutfit] = useState('ÉL');
   const [activeZone, setActiveZone] = useState(null); // null means "home"
   const [activeCategory, setActiveCategory] = useState('CASUAL'); // Ej: CASUAL, FORMAL, SPORT
+  const [isSpinning, setIsSpinning] = useState(false);
   
   // Mutable schema state to allow adding/removing schemas for items
   const [inventorySchema, setInventorySchema] = useState({
@@ -311,6 +312,8 @@ export const SuitcaseProvider = ({ children }) => {
         activeZoneSchema: getActiveZoneSchema(),
         globalColors,
         globalPatterns,
+        isSpinning,
+        setIsSpinning,
         updateItemData,
         addImageToItem,
         removeImageFromItem,

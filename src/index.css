@@ -845,3 +845,54 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-main);
   text-decoration: underline;
 }
+
+/* Onboarding Transparent Glass Wall */
+.onboarding-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50; /* Over everything except maybe modals */
+  display: flex;
+  pointer-events: auto; /* Catch all clicks */
+}
+
+.glass-wall {
+  background: rgba(255, 255, 255, 0.1); /* Very slight tint over Render */
+  backdrop-filter: blur(2px); /* Let the 3D model shine through, but softer */
+}
+
+.onboarding-half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.4s ease, backdrop-filter 0.4s ease;
+  cursor: pointer;
+}
+
+.onboarding-half:hover {
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(0px); /* Unblur on hover for clarity of the model */
+}
+
+.onboarding-btn {
+  font-family: var(--font-title);
+  font-size: 3rem;
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 2rem 4rem;
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none; /* Let the container handle the hover/click */
+}
+
+.onboarding-half:hover .onboarding-btn {
+  transform: scale(1.1);
+}
+
+.onboarding-loading {
+  font-family: var(--font-title);
+  color: var(--text-main);
+  font-size: 2rem;
+  margin: auto;
+}

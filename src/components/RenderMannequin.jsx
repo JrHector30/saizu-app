@@ -34,10 +34,14 @@ class ModelErrorBoundary extends React.Component {
 
 import * as THREE from 'three';
 
+import { useFrame } from '@react-three/fiber';
+
 // The Avatar Model automatically measures and scales ANY gltf to perfectly fit the UI layout (6.5 meters tall)
 const AvatarModel = ({ url }) => {
   // This will throw if the URL is invalid/404, which is caught by ModelErrorBoundary
   const { scene } = useGLTF(url);
+  const avatarRef = useRef();
+  const { isSpinning } = useSuitcase();
 
   useEffect(() => {
     if (!scene) return;
@@ -45,6 +49,7 @@ const AvatarModel = ({ url }) => {
     // 1. Reseteamos la posición por si el modelo quedó en caché de memoria (useGLTF optimization)
     scene.scale.setScalar(1);
     scene.position.set(0, 0, 0);
+    scene.rotation.set(0, 0, 0);
     scene.updateMatrixWorld(true);
 
     // 2. Calculamos sus dimensiones reales provenientes del modelado 3D
@@ -69,7 +74,18 @@ const AvatarModel = ({ url }) => {
     
   }, [scene, url]);
 
-  return <primitive object={scene} />;
+  useFrame(() => {
+    if (avatarRef.current) {
+      if (isSpinning) {
+        avatarRef.current.rotation.y += 0.005; // Girar lentamente forma horaria
+      } else if (avatarRef.current.rotation.y > 0.01 || avatarRef.current.rotation.y < -0.01) {
+        // Volver al frente progresivamente cuando dejen de hacer hover
+        avatarRef.current.rotation.y = THREE.MathUtils.lerp(avatarRef.current.rotation.y, 0, 0.05);
+      }
+    }
+  });
+
+  return <group ref={avatarRef}><primitive object={scene} /></group>;
 };
 
 // Manages the "GTA style" camera tweening based on current zone
