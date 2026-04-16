@@ -30,19 +30,19 @@ function MainInterface() {
           <ProfilesSidebar />
 
           {/* Center Space where the Avatar is (transparent) */}
-          <div style={{ flex: 1, position: 'relative' }}>
-             <header className="app-header" style={{ position: 'absolute', width: '100%' }}>
+          <div style={{ flex: 1, position: 'relative', pointerEvents: 'none' }}>
+             <header className="app-header" style={{ position: 'absolute', width: '100%', pointerEvents: 'auto' }}>
                <h1 className="app-title">サイズ - Saizu</h1>
                <button 
                   onClick={() => supabase.auth.signOut()} 
-                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: '1px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem' }}
+                  style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'transparent', border: '1px solid rgba(0,0,0,0.1)', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: '0.8rem', pointerEvents: 'auto' }}
                >
                   Cerrar Sesión
                </button>
              </header>
 
              {/* Right Editor Panel */}
-             <div className={`editor-wrapper ${activeZone ? 'slide-in' : 'slide-out'}`}>
+             <div className={`editor-wrapper ${activeZone ? 'slide-in' : 'slide-out'}`} style={{ pointerEvents: activeZone ? 'auto' : 'none' }}>
                {activeZone && <EditorPanel />}
              </div>
           </div>
