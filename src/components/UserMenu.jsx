@@ -55,7 +55,7 @@ const UserMenu = () => {
       if (friendIds.length > 0) {
         const { data: friendProfiles } = await supabase
           .from('user_profiles')
-          .select('owner_id, saizu_id, profile_name, display_name, outfit_mode')
+          .select('owner_id, saizu_id, profile_name, outfit_mode')
           .in('owner_id', friendIds);
         setAcceptedFriends(friendProfiles || []);
       } else {
@@ -66,7 +66,7 @@ const UserMenu = () => {
       if (pendingIds.length > 0) {
         const { data: pendingProfiles } = await supabase
           .from('user_profiles')
-          .select('owner_id, saizu_id, profile_name, display_name, outfit_mode')
+          .select('owner_id, saizu_id, profile_name, outfit_mode')
           .in('owner_id', pendingIds);
         setPendingRequests(pendingProfiles || []);
       } else {
@@ -252,7 +252,7 @@ const UserMenu = () => {
                 {pendingRequests.map(p => (
                   <div key={p.owner_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.9rem' }}>{p.profile_name || p.display_name || 'Sin Nombre'}</span>
+                      <span style={{ fontSize: '0.9rem' }}>{p.profile_name || 'Sin Nombre'}</span>
                       <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{p.saizu_id}</span>
                     </div>
                     <button onClick={() => acceptRequest(p.owner_id)} style={{ background: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Aceptar</button>
@@ -287,7 +287,7 @@ const UserMenu = () => {
                   >
                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80', flexShrink: 0 }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{friend.profile_name || friend.display_name || 'Sin Nombre'}</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{friend.profile_name || 'Sin Nombre'}</span>
                       <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{friend.saizu_id}</span>
                       <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>Modo: {friend.outfit_mode}</span>
                     </div>
