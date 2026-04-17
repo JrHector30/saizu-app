@@ -5,47 +5,57 @@ import { supabase } from '../lib/supabaseClient';
 import { Plus, X, Upload } from 'lucide-react';
 
 const GallerySlots = ({ itemId }) => {
-  const { activeZoneData, addImageToItem, removeImageFromItem } = useSuitcase();
+  const { activeZoneData, addImageToItem, removeImageFromItem, viewingFriend } = useSuitcase();
   const fileInputRef = useRef(null);
 
-  const images = activeZoneData[itemId].gallery || [];
+  const isReadOnly = !!viewingFriend;
+  const itemData = activeZoneData[itemId];
+  const images = itemData?.gallery || [];
 
   const handleBoxClick = () => {
-    if (images.length >= 3) return;
+    if (isReadOnly || images.length >= 3) return;
     fileInputRef.current.click();
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || isReadOnly) return;
 
     try {
-       // 1. Client-side local optimization a WebP
-       const { blob } = await convertToWebP(file, 0.85); 
-       
-       // 2. Generar Timestamp único
-       const timestamp = Date.now();
-       const fileName = `${timestamp}_${Math.random().toString(36).substring(7)}.webp`;
-       
-       // 3. Subir a Supabase
-       const { error: uploadError } = await supabase.storage
-         .from('saizu-gallery')
-         .upload(fileName, blob, { contentType: 'image/webp' });
+      // 1. Optimizar a WebP en cliente
+      const { blob } = await convertToWebP(file, 0.85);
 
-       if (uploadError) throw uploadError;
+      // 2. Path: owner_id/timestamp_random.webp para organización en el bucket
+      const { data: { user } } = await supabase.auth.getUser();
+      const ownerId = user?.id || 'unknown';
+      const fileName = `${ownerId}/${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;
 
-       // 4. Extraer URL Pública y guardarla al estado
-       const { data: publicUrlData } = supabase.storage
-         .from('saizu-gallery')
-         .getPublicUrl(fileName);
+      // 3. Subir a saizu-gallery
+      const { error: uploadError } = await supabase.storage
+        .from('saizu-gallery')
+        .upload(fileName, blob, { contentType: 'image/webp' });
 
-       addImageToItem(itemId, { url: publicUrlData.publicUrl, path: fileName });
+      if (uploadError) throw uploadError;
+
+      // 4. URL pública y guardar en estado
+      const { data: publicUrlData } = supabase.storage
+        .from('saizu-gallery')
+        .getPublicUrl(fileName);
+
+      addImageToItem(itemId, { url: publicUrlData.publicUrl, path: fileName });
     } catch (err) {
-      console.error("Error optimizing/uploading image:", err);
-      alert("No se pudo procesar y subir la imagen. Intenta con otro archivo o verifica tu Auth.");
+      console.error('Error optimizing/uploading image:', err);
+      alert('No se pudo subir la imagen. Verifica tu conexión o permisos.');
     }
 
     e.target.value = null;
+  };
+
+  // Normaliza imagen: acepta {url: string} o string directo
+  const getImgSrc = (imgData) => {
+    if (!imgData) return '';
+    if (typeof imgData === 'string') return imgData;
+    return imgData.url || '';
   };
 
   return (
@@ -53,23 +63,30 @@ const GallerySlots = ({ itemId }) => {
       <div className="gallery-grid">
         {images.map((imgData, idx) => (
           <div key={idx} className="gallery-slot filled">
-            <img src={imgData.url} alt={`Referencia ${idx + 1}`} />
-            <button 
-              className="delete-btn" 
-              onClick={(e) => { e.stopPropagation(); removeImageFromItem(itemId, idx); }}
-            >
-              <X size={14} strokeWidth={2} />
-            </button>
+            <img src={getImgSrc(imgData)} alt={`Referencia ${idx + 1}`} />
+            {!isReadOnly && (
+              <button
+                className="delete-btn"
+                onClick={(e) => { e.stopPropagation(); removeImageFromItem(itemId, idx); }}
+              >
+                <X size={14} strokeWidth={2} />
+              </button>
+            )}
           </div>
         ))}
 
+        {/* Slots vacíos — solo clickeable si no es read-only */}
         {Array.from({ length: 3 - images.length }).map((_, idx) => (
-          <div 
-            key={`empty-${idx}`} 
-            className="gallery-slot empty"
-            onClick={idx === 0 ? handleBoxClick : undefined}
+          <div
+            key={`empty-${idx}`}
+            className={`gallery-slot empty${isReadOnly ? '' : ' clickable'}`}
+            onClick={(!isReadOnly && idx === 0) ? handleBoxClick : undefined}
+            style={{ cursor: isReadOnly ? 'default' : (idx === 0 ? 'pointer' : 'default') }}
           >
-            {idx === 0 ? <Plus size={20} color="#666" /> : <Upload size={20} color="#ccc" />}
+            {isReadOnly
+              ? <Upload size={20} color="#444" />
+              : idx === 0 ? <Plus size={20} color="#666" /> : <Upload size={20} color="#ccc" />
+            }
           </div>
         ))}
       </div>
