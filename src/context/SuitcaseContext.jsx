@@ -204,11 +204,12 @@ export const SuitcaseProvider = ({ children }) => {
   };
 
   // --- NUEVA LÓGICA DE PERFILES ---
-  const loadProfilesList = async () => {
+  // targetId: si viene, usa ese owner_id; si no, usa el usuario logueado
+  const loadProfilesList = async (targetId = null) => {
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) return;
 
-    const targetOwnerId = viewingFriend ? viewingFriend.id : user.user.id;
+    const targetOwnerId = targetId ?? user.user.id;
 
     try {
       const { data, error } = await supabase.from('outfit_profiles')
@@ -218,11 +219,10 @@ export const SuitcaseProvider = ({ children }) => {
       
       if (error) throw error;
       setProfilesList(data || []);
-      // Auto-select first if none is active and there's data
-      if (data && data.length > 0 && !activeProfileId) {
+
+      if (data && data.length > 0) {
         setActiveProfileId(data[0].id);
-      } else if (data && data.length === 0) {
-        // If they literally have zero profiles, clear active
+      } else {
         setActiveProfileId(null);
       }
     } catch (e) {
@@ -322,13 +322,17 @@ export const SuitcaseProvider = ({ children }) => {
   }, [activeProfileId]);
 
   useEffect(() => {
-    // Si cambia el viewingFriend (o vuelve a null), limpiamos el perfil activo para que seleccione el default del nuevo user
+    // Al cambiar el amigo visto (o volver a null): limpiar estado y recargar perfiles del nuevo target
+    setInventorySchema(getEmptyInventorySchema());
+    setOutfitsData(getEmptyOutfitState());
     setActiveProfileId(null);
-    loadProfilesList();
+    setProfilesList([]);
+    const friendId = viewingFriend ? viewingFriend.id : null;
+    loadProfilesList(friendId);
   }, [viewingFriend]);
 
   useEffect(() => {
-    loadProfilesList();
+    loadProfilesList(null); // Carga inicial: usuario propio
   }, []);
 
   // REALTIME SUBSCRIPTION ONLY
