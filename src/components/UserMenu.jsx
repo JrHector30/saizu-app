@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useAuth } from '../context/AuthContext';
 import { useSuitcase } from '../context/SuitcaseContext';
-import { User, Copy, UserPlus, Users, LogOut, Check } from 'lucide-react';
+import { User, Copy, UserPlus, Users, LogOut, Check, Pencil, X } from 'lucide-react';
 
 const UserMenu = () => {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { setViewingFriend, viewingFriend } = useSuitcase();
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [friendId, setFriendId] = useState('');
-  
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editNameValue, setEditNameValue] = useState('');
+
   // Amigos reales de DB
   const [acceptedFriends, setAcceptedFriends] = useState([]);
   const [pendingRequests, setPendingRequests] = useState([]);
@@ -29,17 +32,20 @@ const UserMenu = () => {
       const { data, error } = await supabase.from('friendships')
         .select('*')
         .or(`requester_id.eq.${profile.owner_id},receiver_id.eq.${profile.owner_id}`);
-      
+
       if (error) throw error;
 
       const accepted = data.filter(f => f.status === 'accepted');
       const pending = data.filter(f => f.status === 'pending' && f.receiver_id === profile.owner_id);
-      
+
       // Obtener perfiles de los aceptados
       const friendIds = accepted.map(f => f.requester_id === profile.owner_id ? f.receiver_id : f.requester_id);
-      
+
       if (friendIds.length > 0) {
-        const { data: friendProfiles } = await supabase.from('user_profiles').select('*').in('owner_id', friendIds);
+        const { data: friendProfiles } = await supabase
+          .from('user_profiles')
+          .select('owner_id, saizu_id, profile_name, display_name, outfit_mode')
+          .in('owner_id', friendIds);
         setAcceptedFriends(friendProfiles || []);
       } else {
         setAcceptedFriends([]);
@@ -48,14 +54,28 @@ const UserMenu = () => {
       // Obtener perfiles de los pending
       const pendingIds = pending.map(f => f.requester_id);
       if (pendingIds.length > 0) {
-        const { data: pendingProfiles } = await supabase.from('user_profiles').select('*').in('owner_id', pendingIds);
+        const { data: pendingProfiles } = await supabase
+          .from('user_profiles')
+          .select('owner_id, saizu_id, profile_name, display_name, outfit_mode')
+          .in('owner_id', pendingIds);
         setPendingRequests(pendingProfiles || []);
       } else {
         setPendingRequests([]);
       }
 
-    } catch(err) {
+    } catch (err) {
       console.error(err);
+    }
+  };
+
+  const saveDisplayName = async () => {
+    if (!profile || !editNameValue.trim()) return;
+    try {
+      await supabase.from('user_profiles').update({ display_name: editNameValue.trim() }).eq('owner_id', profile.owner_id);
+      await refreshProfile();
+      setIsEditingName(false);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -73,13 +93,13 @@ const UserMenu = () => {
     try {
       // Buscar el UUID del compa por el text ID (SAI-XXXX)
       const { data: targetProfile, error: targetError } = await supabase.from('user_profiles').select('*').eq('saizu_id', friendId.trim()).single();
-      
+
       if (targetError || !targetProfile) {
         return alert("Usuario no encontrado.");
       }
-      
+
       if (targetProfile.owner_id === profile.owner_id) {
-         return alert("No puedes agregarte a ti mismo.");
+        return alert("No puedes agregarte a ti mismo.");
       }
 
       const { error } = await supabase.from('friendships').insert({
@@ -87,7 +107,7 @@ const UserMenu = () => {
         receiver_id: targetProfile.owner_id,
         status: 'pending'
       });
-      
+
       if (error) throw error;
       alert("Solicitud enviada");
       setFriendId('');
@@ -104,7 +124,7 @@ const UserMenu = () => {
         .eq('requester_id', requesterUuid)
         .eq('receiver_id', profile.owner_id);
       loadFriends();
-    } catch(err) {
+    } catch (err) {
       console.error(err);
     }
   };
@@ -112,7 +132,7 @@ const UserMenu = () => {
   return (
     <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 60 }}>
       {/* Botón Circular Glass */}
-      <button 
+      <button
         onClick={() => setIsOpen(!isOpen)}
         className="user-menu-avatar"
         style={{
@@ -144,11 +164,36 @@ const UserMenu = () => {
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
           display: 'flex', flexDirection: 'column', gap: '1.5rem'
         }}>
-          
+
           {/* Header ID */}
           <div style={{ textAlign: 'center' }}>
+            {isEditingName ? (
+              <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem', justifyContent: 'center' }}>
+                <input
+                  type="text"
+                  value={editNameValue}
+                  onChange={e => setEditNameValue(e.target.value)}
+                  placeholder="Tu Nombre"
+                  style={{
+                    background: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: '4px',
+                    color: '#fff', padding: '0.2rem 0.5rem', textAlign: 'center', width: '120px'
+                  }}
+                  autoFocus
+                />
+                <button onClick={saveDisplayName} style={{ background: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer' }}><Check size={14} /></button>
+                <button onClick={() => setIsEditingName(false)} style={{ background: 'rgba(255,255,255,0.1)', color: '#fff', border: 'none', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer' }}><X size={14} /></button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{profile?.display_name || 'Sin Nombre'}</span>
+                <button onClick={() => { setEditNameValue(profile?.display_name || ''); setIsEditingName(true); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                  <Pencil size={14} />
+                </button>
+              </div>
+            )}
+
             <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.5rem' }}>MI CÓDIGO SAIZU</p>
-            <div 
+            <div
               onClick={handleCopyId}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem',
@@ -165,9 +210,9 @@ const UserMenu = () => {
 
           {/* Agregar Amigo */}
           <form onSubmit={sendFriendRequest} style={{ display: 'flex', gap: '0.5rem' }}>
-            <input 
-              type="text" 
-              placeholder="Ej. SAI-A1B2" 
+            <input
+              type="text"
+              placeholder="Ej. SAI-A1B2"
               value={friendId}
               onChange={e => setFriendId(e.target.value.toUpperCase())}
               style={{
@@ -190,8 +235,11 @@ const UserMenu = () => {
               <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.5rem' }}>SOLICITUDES</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {pendingRequests.map(p => (
-                  <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '0.9rem' }}>{p.saizu_id}</span>
+                  <div key={p.owner_id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.5rem', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span style={{ fontSize: '0.9rem' }}>{p.profile_name || p.display_name || 'Sin Nombre'}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{p.saizu_id}</span>
+                    </div>
                     <button onClick={() => acceptRequest(p.owner_id)} style={{ background: '#4ade80', color: '#000', border: 'none', borderRadius: '4px', padding: '0.2rem 0.5rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 'bold' }}>Aceptar</button>
                   </div>
                 ))}
@@ -202,18 +250,18 @@ const UserMenu = () => {
           {/* Lista Amigos */}
           <div>
             <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <Users size={14}/> MIS AMIGOS
+              <Users size={14} /> MIS AMIGOS
             </p>
             {acceptedFriends.length === 0 ? (
-               <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>No has agregado amigos aún.</p>
+              <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.3)', textAlign: 'center' }}>No has agregado amigos aún.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                 {acceptedFriends.map(friend => (
-                  <button 
+                  <button
                     key={friend.id}
                     onClick={() => {
-                       setViewingFriend({ id: friend.owner_id, saizu_id: friend.saizu_id, mode: friend.outfit_mode });
-                       setIsOpen(false);
+                      setViewingFriend({ id: friend.owner_id, saizu_id: friend.saizu_id, mode: friend.outfit_mode });
+                      setIsOpen(false);
                     }}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -222,10 +270,11 @@ const UserMenu = () => {
                       padding: '0.75rem', color: '#fff', cursor: 'pointer', textAlign: 'left', transition: 'all 0.2s'
                     }}
                   >
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80' }}/>
+                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ade80', flexShrink: 0 }} />
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
-                       <span style={{ fontSize: '0.9rem' }}>{friend.saizu_id}</span>
-                       <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)' }}>Armario de {friend.outfit_mode}</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '500' }}>{friend.profile_name || friend.display_name || 'Sin Nombre'}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', fontFamily: 'monospace' }}>{friend.saizu_id}</span>
+                      <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.35)' }}>Modo: {friend.outfit_mode}</span>
                     </div>
                   </button>
                 ))}
@@ -236,7 +285,7 @@ const UserMenu = () => {
           <div style={{ height: '1px', background: 'rgba(255,255,255,0.1)' }} />
 
           {/* Cerrar Sesion */}
-          <button 
+          <button
             onClick={() => supabase.auth.signOut()}
             style={{
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
@@ -246,7 +295,7 @@ const UserMenu = () => {
           >
             <LogOut size={16} /> Cerrar Sesión
           </button>
-          
+
         </div>
       )}
     </div>
