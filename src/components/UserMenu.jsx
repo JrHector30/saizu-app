@@ -28,18 +28,29 @@ const UserMenu = () => {
   const loadFriends = async () => {
     if (!profile) return;
     try {
-      // Pedimos las relaciones
-      const { data, error } = await supabase.from('friendships')
+      // Query 1: filas donde soy el solicitante
+      const { data: asRequester, error: e1 } = await supabase
+        .from('friendships')
         .select('*')
-        .or(`requester_id.eq.${profile.owner_id},receiver_id.eq.${profile.owner_id}`);
+        .eq('requester_id', profile.owner_id);
 
-      if (error) throw error;
+      // Query 2: filas donde soy el receptor
+      const { data: asReceiver, error: e2 } = await supabase
+        .from('friendships')
+        .select('*')
+        .eq('receiver_id', profile.owner_id);
 
-      const accepted = data.filter(f => f.status === 'accepted');
-      const pending = data.filter(f => f.status === 'pending' && f.receiver_id === profile.owner_id);
+      if (e1 || e2) throw e1 || e2;
 
-      // Obtener perfiles de los aceptados
-      const friendIds = accepted.map(f => f.requester_id === profile.owner_id ? f.receiver_id : f.requester_id);
+      const all = [...(asRequester || []), ...(asReceiver || [])];
+
+      const accepted = all.filter(f => f.status === 'accepted');
+      const pending = all.filter(f => f.status === 'pending' && f.receiver_id === profile.owner_id);
+
+      // El amigo es siempre el que NO soy yo
+      const friendIds = accepted.map(f =>
+        f.requester_id === profile.owner_id ? f.receiver_id : f.requester_id
+      );
 
       if (friendIds.length > 0) {
         const { data: friendProfiles } = await supabase
@@ -51,7 +62,6 @@ const UserMenu = () => {
         setAcceptedFriends([]);
       }
 
-      // Obtener perfiles de los pending
       const pendingIds = pending.map(f => f.requester_id);
       if (pendingIds.length > 0) {
         const { data: pendingProfiles } = await supabase
@@ -64,18 +74,22 @@ const UserMenu = () => {
       }
 
     } catch (err) {
-      console.error(err);
+      console.error('loadFriends error:', err);
     }
   };
 
   const saveDisplayName = async () => {
     if (!profile || !editNameValue.trim()) return;
     try {
-      await supabase.from('user_profiles').update({ display_name: editNameValue.trim() }).eq('owner_id', profile.owner_id);
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ profile_name: editNameValue.trim() })
+        .eq('owner_id', profile.owner_id);
+      if (error) throw error;
       await refreshProfile();
       setIsEditingName(false);
     } catch (e) {
-      console.error(e);
+      console.error('saveDisplayName error:', e);
     }
   };
 
@@ -119,13 +133,14 @@ const UserMenu = () => {
 
   const acceptRequest = async (requesterUuid) => {
     try {
-      await supabase.from('friendships')
+      const { error } = await supabase.from('friendships')
         .update({ status: 'accepted' })
         .eq('requester_id', requesterUuid)
         .eq('receiver_id', profile.owner_id);
-      loadFriends();
+      if (error) throw error;
+      await loadFriends(); // Recargar lista sin refresh de página
     } catch (err) {
-      console.error(err);
+      console.error('acceptRequest error:', err);
     }
   };
 
