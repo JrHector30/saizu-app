@@ -12,7 +12,10 @@ const getEmptyInventorySchema = () => ({ head: [], torso: [], hands: [], legs: [
 
 export const SuitcaseProvider = ({ children }) => {
   const [activeOutfit, setActiveOutfit] = useState('ÉL');
-  const [activeZone, setActiveZone] = useState(null);
+  const [activeZone, setActiveZone] = useState(() => {
+    const saved = localStorage.getItem('saizu_activeZone');
+    return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
+  });
   const [activeZoneData, setActiveZoneData] = useState([]); 
   
   // NEW DYNAMIC PROFILES
@@ -25,9 +28,33 @@ export const SuitcaseProvider = ({ children }) => {
   
   const [isSpinning, setIsSpinning] = useState(false);
   
-  // They start completely empty
-  const [inventorySchema, setInventorySchema] = useState(getEmptyInventorySchema());
-  const [outfitsData, setOutfitsData] = useState(getEmptyOutfitState());
+  // They start completely empty or from draft memory
+  const [inventorySchema, setInventorySchema] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saizu_inventorySchema');
+      if (saved && saved !== 'null' && saved !== 'undefined') return JSON.parse(saved) || getEmptyInventorySchema();
+    } catch(e){}
+    return getEmptyInventorySchema();
+  });
+  const [outfitsData, setOutfitsData] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saizu_outfitsData');
+      if (saved && saved !== 'null' && saved !== 'undefined') return JSON.parse(saved) || getEmptyOutfitState();
+    } catch(e){}
+    return getEmptyOutfitState();
+  });
+
+  useEffect(() => {
+    if (activeZone) localStorage.setItem('saizu_activeZone', activeZone);
+    else localStorage.removeItem('saizu_activeZone');
+  }, [activeZone]);
+
+  useEffect(() => {
+    if (!viewingFriend) {
+      if (inventorySchema) localStorage.setItem('saizu_inventorySchema', JSON.stringify(inventorySchema));
+      if (outfitsData) localStorage.setItem('saizu_outfitsData', JSON.stringify(outfitsData));
+    }
+  }, [inventorySchema, outfitsData, viewingFriend]);
 
   // Shared Global Options State
   const [globalColors, setGlobalColors] = useState(COLOR_PALETTE);

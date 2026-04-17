@@ -90,6 +90,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
   const sizes = itemConfig.sizeOpts || defaultOptions.size;
   const types = itemConfig.typeOpts || defaultOptions.type;
   const cuts = itemConfig.cutOpts || defaultOptions.cut;
+  const attrs = itemConfig.attrs || ['size', 'brands', 'colors', 'gallery'];
 
   return (
     <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
@@ -117,7 +118,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
       </button>
       {isOpen && (
         <div className="accordion-content" style={{ opacity: localReadOnly ? 0.7 : 1, pointerEvents: localReadOnly ? 'none' : 'auto' }}>
-          {itemConfig.attrs.includes('size') && (
+          {attrs.includes('size') && (
             <OptionsSelector 
               label="Talla" 
               options={sizes} 
@@ -129,7 +130,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             />
           )}
 
-          {itemConfig.attrs.includes('type') && (
+          {attrs.includes('type') && (
             <OptionsSelector 
               label="Tipo" 
               options={types} 
@@ -141,7 +142,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             />
           )}
 
-          {itemConfig.attrs.includes('cut') && (
+          {attrs.includes('cut') && (
             <OptionsSelector 
               label="Corte / Fit" 
               options={cuts} 
@@ -153,7 +154,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             />
           )}
 
-          {itemConfig.attrs.includes('brands') && (
+          {attrs.includes('brands') && (
             <div className="input-group">
               <label>Marca / Fabricante</label>
               <input 
@@ -167,21 +168,21 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             </div>
           )}
 
-          {itemConfig.attrs.includes('colors') && (
+          {attrs.includes('colors') && (
             <div className="input-group">
               <label>Colores Preferidos</label>
               <ColorSwatchPicker itemId={itemConfig.id} />
             </div>
           )}
 
-          {itemConfig.attrs.includes('patterns') && (
+          {attrs.includes('patterns') && (
             <div className="input-group">
               <label>Patrones Textil/Diseño</label>
               <PatternPicker itemId={itemConfig.id} />
             </div>
           )}
 
-          {itemConfig.attrs.includes('gallery') && (
+          {attrs.includes('gallery') && (
             <div className="gallery-section">
               <label>Fotos de Referencia</label>
               <GallerySlots itemId={itemConfig.id} />
@@ -243,7 +244,15 @@ const PRESET_ATTRS = [
 
 const EditorPanel = () => {
   const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, addCustomItem, deleteCustomItem, viewingFriend } = useSuitcase();
-  const [openAccordion, setOpenAccordion] = useState(null);
+  const [openAccordion, setOpenAccordion] = useState(() => {
+    const saved = localStorage.getItem('saizu_openAccordion');
+    return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
+  });
+  
+  useEffect(() => {
+    if (openAccordion) localStorage.setItem('saizu_openAccordion', openAccordion);
+    else localStorage.removeItem('saizu_openAccordion');
+  }, [openAccordion]);
   
   // Custom item creator state
   const [isCreating, setIsCreating] = useState(false);
