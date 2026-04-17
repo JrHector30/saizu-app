@@ -20,7 +20,12 @@ export const SuitcaseProvider = ({ children }) => {
   
   // NEW DYNAMIC PROFILES
   const [profilesList, setProfilesList] = useState([]);
-  const [activeProfileId, setActiveProfileId] = useState(null);
+  const [activeProfileId, setActiveProfileId] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saizu_activeProfileId');
+      return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
+    } catch(e) { return null; }
+  });
   
   // -- SAÍZU NETWORK --
   const [viewingFriend, setViewingFriend] = useState(null);
@@ -48,6 +53,14 @@ export const SuitcaseProvider = ({ children }) => {
     if (activeZone) localStorage.setItem('saizu_activeZone', activeZone);
     else localStorage.removeItem('saizu_activeZone');
   }, [activeZone]);
+
+  useEffect(() => {
+    // Solo guardar activeProfileId cuando es el usuario propio (no amigo)
+    if (!viewingFriend) {
+      if (activeProfileId) localStorage.setItem('saizu_activeProfileId', activeProfileId);
+      else localStorage.removeItem('saizu_activeProfileId');
+    }
+  }, [activeProfileId, viewingFriend]);
 
   useEffect(() => {
     if (!viewingFriend) {
