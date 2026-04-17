@@ -14,6 +14,14 @@ const UserMenu = () => {
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editNameValue, setEditNameValue] = useState('');
+  const [localProfileName, setLocalProfileName] = useState('');
+
+  // Sincronizar localProfileName cuando cargue el profile
+  useEffect(() => {
+    if (profile?.profile_name) {
+      setLocalProfileName(profile.profile_name);
+    }
+  }, [profile?.profile_name]);
 
   // Amigos reales de DB
   const [acceptedFriends, setAcceptedFriends] = useState([]);
@@ -86,10 +94,14 @@ const UserMenu = () => {
         .update({ profile_name: editNameValue.trim() })
         .eq('owner_id', profile.owner_id);
       if (error) throw error;
-      await refreshProfile();
+      // Actualizar estado local inmediatamente (no esperar re-fetch)
+      setLocalProfileName(editNameValue.trim());
       setIsEditingName(false);
+      alert('Perfil actualizado ✓');
+      refreshProfile(); // Sync en segundo plano
     } catch (e) {
       console.error('saveDisplayName error:', e);
+      alert('Error al guardar: ' + e.message);
     }
   };
 
@@ -200,8 +212,8 @@ const UserMenu = () => {
               </div>
             ) : (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{profile?.display_name || 'Sin Nombre'}</span>
-                <button onClick={() => { setEditNameValue(profile?.display_name || ''); setIsEditingName(true); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{localProfileName || 'Sin Nombre'}</span>
+                <button onClick={() => { setEditNameValue(localProfileName || ''); setIsEditingName(true); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}>
                   <Pencil size={14} />
                 </button>
               </div>
