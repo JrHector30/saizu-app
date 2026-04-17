@@ -61,9 +61,12 @@ const GallerySlots = ({ itemId }) => {
   return (
     <div className="gallery-container">
       <div className="gallery-grid">
-        {images.map((imgData, idx) => (
+        {images.map((imgData, idx) => {
+          const src = getImgSrc(imgData);
+          console.log(`[GallerySlots] itemId=${itemId} idx=${idx} src=`, src, '| raw=', imgData);
+          return (
           <div key={idx} className="gallery-slot filled">
-            <img src={getImgSrc(imgData)} alt={`Referencia ${idx + 1}`} />
+            <img src={src} alt={`Referencia ${idx + 1}`} />
             {!isReadOnly && (
               <button
                 className="delete-btn"
@@ -73,7 +76,8 @@ const GallerySlots = ({ itemId }) => {
               </button>
             )}
           </div>
-        ))}
+          );
+        })}
 
         {/* Slots vacíos — solo clickeable si no es read-only */}
         {Array.from({ length: 3 - images.length }).map((_, idx) => (

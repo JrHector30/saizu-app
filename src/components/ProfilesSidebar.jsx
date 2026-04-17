@@ -37,7 +37,7 @@ const ProfilesSidebar = () => {
   return (
     <div className="profiles-sidebar glass-panel-dark">
       <h2 className="sidebar-title">
-        {viewingFriend ? `Armario de ${viewingFriend.saizu_id}` : 'Mis Outfits'}
+        {viewingFriend ? `Armario de ${viewingFriend.profile_name || viewingFriend.saizu_id}` : 'Mis Outfits'}
       </h2>
       
       <div className="profiles-list">
