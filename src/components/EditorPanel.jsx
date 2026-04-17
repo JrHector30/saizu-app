@@ -244,6 +244,7 @@ const PRESET_ATTRS = [
 
 const EditorPanel = () => {
   const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, addCustomItem, deleteCustomItem, viewingFriend } = useSuitcase();
+  const friendName = viewingFriend?.profile_name || viewingFriend?.saizu_id || null;
   const [openAccordion, setOpenAccordion] = useState(() => {
     const saved = localStorage.getItem('saizu_openAccordion');
     return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
@@ -288,7 +289,14 @@ const EditorPanel = () => {
   return (
     <div className="editor-panel glassmorphism advanced-scroll">
       <div className="editor-header">
-        <h2 className="editor-title">{zoneTranslations[activeZone]}</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {friendName && (
+            <span style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              Armario de {friendName}
+            </span>
+          )}
+          <h2 className="editor-title">{zoneTranslations[activeZone]}</h2>
+        </div>
         <button 
           className="close-btn" 
           onClick={() => setActiveZone(null)}

@@ -287,7 +287,7 @@ const UserMenu = () => {
                   <button
                     key={friend.id}
                     onClick={() => {
-                      setViewingFriend({ id: friend.owner_id, saizu_id: friend.saizu_id, mode: friend.outfit_mode });
+                      setViewingFriend({ id: friend.owner_id, saizu_id: friend.saizu_id, profile_name: friend.profile_name, mode: friend.outfit_mode });
                       setIsOpen(false);
                     }}
                     style={{
