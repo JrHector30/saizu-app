@@ -1,8 +1,71 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSuitcase } from '../context/SuitcaseContext';
 import { convertToWebP } from '../utils/imageOptimizer';
 import { supabase } from '../lib/supabaseClient';
 import { Plus, X, Upload, ZoomIn } from 'lucide-react';
+
+// Modal renderizado en document.body via Portal — siempre centrado en pantalla completa
+const ImageModal = ({ src, onClose }) => {
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0, left: 0,
+        width: '100vw', height: '100vh',
+        zIndex: 9999,
+        background: 'rgba(0,0,0,0.85)',
+        backdropFilter: 'blur(10px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'zoom-out',
+      }}
+    >
+      <img
+        src={src}
+        alt="Preview"
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: '90vw',
+          maxHeight: '90vh',
+          objectFit: 'contain',
+          borderRadius: '12px',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.9)',
+          cursor: 'default',
+        }}
+      />
+      <button
+        onClick={onClose}
+        style={{
+          position: 'fixed',
+          top: '1.5rem',
+          right: '1.5rem',
+          background: 'rgba(255,255,255,0.15)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          borderRadius: '50%',
+          width: '44px', height: '44px',
+          color: '#fff',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(4px)',
+        }}
+      >
+        <X size={20} />
+      </button>
+    </div>,
+    document.body
+  );
+};
 
 const GallerySlots = ({ itemId }) => {
   const { activeZoneData, addImageToItem, removeImageFromItem, viewingFriend } = useSuitcase();
@@ -12,14 +75,6 @@ const GallerySlots = ({ itemId }) => {
   const isReadOnly = !!viewingFriend;
   const itemData = activeZoneData[itemId];
   const images = itemData?.gallery || [];
-
-  // Cerrar preview con Escape
-  useEffect(() => {
-    if (!previewUrl) return;
-    const handleKey = (e) => { if (e.key === 'Escape') setPreviewUrl(null); };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [previewUrl]);
 
   const handleBoxClick = () => {
     if (isReadOnly || images.length >= 3) return;
@@ -48,8 +103,8 @@ const GallerySlots = ({ itemId }) => {
 
       addImageToItem(itemId, { url: publicUrlData.publicUrl, path: fileName });
     } catch (err) {
-      console.error('Error optimizing/uploading image:', err);
-      alert('No se pudo subir la imagen. Verifica tu conexión o permisos.');
+      console.error('Error uploading image:', err);
+      alert('No se pudo subir la imagen.');
     }
 
     e.target.value = null;
@@ -63,44 +118,8 @@ const GallerySlots = ({ itemId }) => {
 
   return (
     <>
-      {/* Modal de preview fullscreen */}
-      {previewUrl && (
-        <div
-          onClick={() => setPreviewUrl(null)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 9999,
-            background: 'rgba(0,0,0,0.85)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'zoom-out',
-            backdropFilter: 'blur(8px)'
-          }}
-        >
-          <img
-            src={previewUrl}
-            alt="Preview"
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              maxWidth: '90vw', maxHeight: '90vh',
-              borderRadius: '12px',
-              boxShadow: '0 24px 64px rgba(0,0,0,0.8)',
-              cursor: 'default',
-              objectFit: 'contain'
-            }}
-          />
-          <button
-            onClick={() => setPreviewUrl(null)}
-            style={{
-              position: 'absolute', top: '1.5rem', right: '1.5rem',
-              background: 'rgba(255,255,255,0.1)', border: 'none',
-              borderRadius: '50%', width: '40px', height: '40px',
-              color: '#fff', cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center'
-            }}
-          >
-            <X size={20} />
-          </button>
-        </div>
-      )}
+      {/* Portal: se monta en document.body, fuera de cualquier panel */}
+      {previewUrl && <ImageModal src={previewUrl} onClose={() => setPreviewUrl(null)} />}
 
       <div className="gallery-container">
         <div className="gallery-grid">
@@ -110,25 +129,34 @@ const GallerySlots = ({ itemId }) => {
             console.log(`[GallerySlots] ${ownerHint} | itemId=${itemId} | idx=${idx} | src=${src}`);
             return (
               <div key={idx} className="gallery-slot filled" style={{ position: 'relative' }}>
+                {/* Imagen — siempre clickeable para zoom */}
                 <img
                   src={src}
                   alt={`Referencia ${idx + 1}`}
                   onClick={() => setPreviewUrl(src)}
-                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }}
+                  style={{ cursor: 'zoom-in', width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', display: 'block' }}
                 />
-                {/* Ícono zoom — siempre visible, propio y amigo */}
+
+                {/* Botón zoom — SIEMPRE visible, modo propio y modo amigo */}
                 <button
                   onClick={() => setPreviewUrl(src)}
+                  title="Ver en grande"
                   style={{
                     position: 'absolute', bottom: '4px', left: '4px',
-                    background: 'rgba(0,0,0,0.55)', border: 'none',
-                    borderRadius: '4px', padding: '3px 5px',
-                    color: '#fff', cursor: 'pointer', lineHeight: 0
+                    background: 'rgba(0,0,0,0.6)',
+                    border: 'none',
+                    borderRadius: '4px',
+                    padding: '3px 5px',
+                    color: '#fff',
+                    cursor: 'pointer',
+                    lineHeight: 0,
+                    pointerEvents: 'auto', // garantizado
                   }}
                 >
                   <ZoomIn size={12} />
                 </button>
-                {/* Borrado solo en modo propio */}
+
+                {/* Botón borrar — SOLO en modo propio */}
                 {!isReadOnly && (
                   <button
                     className="delete-btn"
@@ -142,13 +170,13 @@ const GallerySlots = ({ itemId }) => {
             );
           })}
 
-          {/* Slots vacíos — solo clickeable si no es read-only */}
+          {/* Slots vacíos — solo interactivos en modo propio */}
           {Array.from({ length: 3 - images.length }).map((_, idx) => (
             <div
               key={`empty-${idx}`}
-              className={`gallery-slot empty${isReadOnly ? '' : ' clickable'}`}
+              className="gallery-slot empty"
               onClick={(!isReadOnly && idx === 0) ? handleBoxClick : undefined}
-              style={{ cursor: isReadOnly ? 'default' : (idx === 0 ? 'pointer' : 'default') }}
+              style={{ cursor: (!isReadOnly && idx === 0) ? 'pointer' : 'default' }}
             >
               {isReadOnly
                 ? <Upload size={20} color="#444" />
