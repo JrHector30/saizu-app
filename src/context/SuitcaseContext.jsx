@@ -297,7 +297,26 @@ export const SuitcaseProvider = ({ children }) => {
             };
             newSchema[z].push(reconstructedItem);
 
-            // Reconstruimos la state data
+            // Normalizar image_urls: puede venir como TEXT[] con strings JSON o con objetos
+            const rawGallery = row.image_urls || [];
+            const gallery = rawGallery.map(item => {
+               // Caso 1: ya es objeto {url, path}
+               if (item && typeof item === 'object' && item.url) return item;
+               // Caso 2: string JSON stringificado
+               if (typeof item === 'string') {
+                  try {
+                     const parsed = JSON.parse(item);
+                     if (parsed?.url) return parsed;
+                  } catch(_) {}
+                  // Caso 3: string que ES la URL directa
+                  if (item.startsWith('http')) return { url: item, path: '' };
+                  // Caso 4: string que ES el path en el bucket
+                  const { data: pub } = supabase.storage.from('saizu-gallery').getPublicUrl(item);
+                  return { url: pub.publicUrl, path: item };
+               }
+               return null;
+            }).filter(Boolean);
+
             newData[z][row.item_id] = {
                size: row.size_value || '',
                brands: row.brand || '',
@@ -305,7 +324,7 @@ export const SuitcaseProvider = ({ children }) => {
                type: row.extra_details?.type || '',
                colors: row.extra_details?.colors || [],
                patterns: row.extra_details?.patterns || [],
-               gallery: row.image_urls || []
+               gallery
             };
          });
          setInventorySchema(newSchema);

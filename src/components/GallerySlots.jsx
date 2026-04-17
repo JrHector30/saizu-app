@@ -63,7 +63,8 @@ const GallerySlots = ({ itemId }) => {
       <div className="gallery-grid">
         {images.map((imgData, idx) => {
           const src = getImgSrc(imgData);
-          console.log(`[GallerySlots] itemId=${itemId} idx=${idx} src=`, src, '| raw=', imgData);
+          const ownerHint = viewingFriend ? `friend:${viewingFriend.id}` : 'self';
+          console.log(`[GallerySlots] ${ownerHint} | itemId=${itemId} | idx=${idx} | src=${src} | raw=`, imgData);
           return (
           <div key={idx} className="gallery-slot filled">
             <img src={src} alt={`Referencia ${idx + 1}`} />
