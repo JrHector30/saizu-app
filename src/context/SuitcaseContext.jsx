@@ -94,29 +94,10 @@ export const SuitcaseProvider = ({ children }) => {
 
 
   // Shared Global Options State
-  const [globalColors, setGlobalColors] = useState(() => {
-    try {
-      const saved = localStorage.getItem('saizu_globalColors');
-      if (saved && saved !== 'null') return JSON.parse(saved);
-    } catch(_) {}
-    return COLOR_PALETTE;
-  });
-
-  const [globalPatterns, setGlobalPatterns] = useState(() => {
-    try {
-      const saved = localStorage.getItem('saizu_globalPatterns');
-      if (saved && saved !== 'null') return JSON.parse(saved);
-    } catch(_) {}
-    return PATTERNS;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('saizu_globalColors', JSON.stringify(globalColors));
-  }, [globalColors]);
-
-  useEffect(() => {
-    localStorage.setItem('saizu_globalPatterns', JSON.stringify(globalPatterns));
-  }, [globalPatterns]);
+  // Estos estados son POR SESIÓN: los predefinidos vienen de wardrobeData,
+  // los personalizados se reconstruyen al cargar cada perfil desde Supabase.
+  const [globalColors, setGlobalColors] = useState(COLOR_PALETTE);
+  const [globalPatterns, setGlobalPatterns] = useState(PATTERNS);
 
   const getActiveZoneData = () => {
     if (!activeZone) return null;
@@ -178,10 +159,11 @@ export const SuitcaseProvider = ({ children }) => {
     }));
   };
 
-  // CRUD: Delete an item completely
-  const deleteCustomItem = (itemId) => {
-    if (!activeZone) return;
-    
+  // CRUD: Delete an item completely (async: borra de Supabase y limpia draft)
+  const deleteCustomItem = async (itemId) => {
+    if (!activeZone || !activeProfileId) return;
+
+    // 1. Borrar del estado local inmediatamente (UI responsiva)
     setInventorySchema(prev => {
       const cloned = { ...prev };
       cloned[activeZone] = cloned[activeZone].filter(item => item.id !== itemId);
@@ -194,6 +176,29 @@ export const SuitcaseProvider = ({ children }) => {
       delete cloned[activeZone][itemId];
       return cloned;
     });
+
+    // 2. Borrar de Supabase para que no vuelva al recargar
+    try {
+      await supabase.from('sizes_data')
+        .delete()
+        .eq('profile_id', activeProfileId)
+        .eq('zone', activeZone)
+        .eq('item_id', itemId);
+
+      // 3. Limpiar draft de localStorage si existía
+      try {
+        const key = `saizu_draft_${activeProfileId}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '{}');
+        if (existing[activeZone]?.[itemId]) {
+          delete existing[activeZone][itemId];
+          if (Object.keys(existing[activeZone]).length === 0) delete existing[activeZone];
+          if (Object.keys(existing).length === 0) localStorage.removeItem(key);
+          else localStorage.setItem(key, JSON.stringify(existing));
+        }
+      } catch(_) {}
+    } catch(err) {
+      console.error('Error eliminando prenda de Supabase:', err);
+    }
   };
 
   // Dynamic Options: Add a new option
@@ -404,6 +409,26 @@ export const SuitcaseProvider = ({ children }) => {
           const draft = draftBuffer[z]?.[row.item_id];
           newData[z][row.item_id] = draft ? { ...fromDB, ...draft } : fromDB;
         });
+
+        // Reconstruir opciones personalizadas del perfil cargado (sin contaminar otros perfiles)
+        const customPatterns = new Set();
+        const customColors = [];
+        const customColorIds = new Set();
+
+        data.forEach(row => {
+          (row.extra_details?.patterns || []).forEach(p => {
+            if (!PATTERNS.includes(p)) customPatterns.add(p);
+          });
+          (row.extra_details?.colors || []).forEach(c => {
+            if (c?.id && !COLOR_PALETTE.find(cp => cp.id === c.id) && !customColorIds.has(c.id)) {
+              customColors.push(c);
+              customColorIds.add(c.id);
+            }
+          });
+        });
+
+        setGlobalPatterns(customPatterns.size > 0 ? [...PATTERNS, ...Array.from(customPatterns)] : PATTERNS);
+        setGlobalColors(customColors.length > 0 ? [...COLOR_PALETTE, ...customColors] : COLOR_PALETTE);
 
         setInventorySchema(newSchema);
         setOutfitsData(newData);
