@@ -104,16 +104,32 @@ export const SuitcaseProvider = ({ children }) => {
   // Field updater for selections
   const updateItemData = (itemId, field, value) => {
     if (!activeZone) return;
-    setOutfitsData(prev => ({
-      ...prev,
-      [activeZone]: {
-        ...prev[activeZone],
-        [itemId]: {
-          ...prev[activeZone][itemId],
-          [field]: value
+    setOutfitsData(prev => {
+      const updated = {
+        ...prev,
+        [activeZone]: {
+          ...prev[activeZone],
+          [itemId]: {
+            ...prev[activeZone][itemId],
+            [field]: value
+          }
         }
+      };
+      // Persistir draft por tecla (solo si hay perfil activo y es el usuario propio)
+      if (activeProfileId && !viewingFriend) {
+        try {
+          const key = `saizu_draft_${activeProfileId}`;
+          const existing = JSON.parse(localStorage.getItem(key) || '{}');
+          if (!existing[activeZone]) existing[activeZone] = {};
+          existing[activeZone][itemId] = {
+            ...((existing[activeZone][itemId]) || {}),
+            [field]: value
+          };
+          localStorage.setItem(key, JSON.stringify(existing));
+        } catch(_) {}
       }
-    }));
+      return updated;
+    });
   };
 
   // CRUD: Add a newly crafted custom item
@@ -301,7 +317,6 @@ export const SuitcaseProvider = ({ children }) => {
 
     if (!activeProfileId) return;
 
-    // Animación del maniquí girando al cambiar perfil
     setIsSpinning(true);
     setTimeout(() => setIsSpinning(false), 1500);
 
@@ -309,60 +324,63 @@ export const SuitcaseProvider = ({ children }) => {
       const { data, error } = await supabase.from('sizes_data').select('*').eq('profile_id', activeProfileId);
       if (error) throw error;
 
+      // Leer draft buffer pendiente para este perfil
+      let draftBuffer = {};
+      try {
+        const raw = localStorage.getItem(`saizu_draft_${activeProfileId}`);
+        if (raw) draftBuffer = JSON.parse(raw) || {};
+      } catch(_) {}
+
       if (data && data.length > 0) {
-         let newSchema = getEmptyInventorySchema();
-         let newData = getEmptyOutfitState();
-         
-         data.forEach(row => {
-            const z = row.zone;
-            if (!newSchema[z]) return;
+        let newSchema = getEmptyInventorySchema();
+        let newData = getEmptyOutfitState();
 
-            // Reconstruimos el custom item en base a lo guardado
-            const reconstructedItem = {
-               id: row.item_id,
-               label: row.extra_details?.label || 'Prenda',
-               icon: row.extra_details?.icon || '🛍️',
-               sizeOpts: row.extra_details?.sizeOpts || [],
-               typeOpts: row.extra_details?.typeOpts || [],
-               cutOpts: row.extra_details?.cutOpts || []
-            };
-            newSchema[z].push(reconstructedItem);
+        data.forEach(row => {
+          const z = row.zone;
+          if (!newSchema[z]) return;
 
-            // Normalizar image_urls: puede venir como TEXT[] con strings JSON o con objetos
-            const rawGallery = row.image_urls || [];
-            const gallery = rawGallery.map(item => {
-               // Caso 1: ya es objeto {url, path}
-               if (item && typeof item === 'object' && item.url) return item;
-               // Caso 2: string JSON stringificado
-               if (typeof item === 'string') {
-                  try {
-                     const parsed = JSON.parse(item);
-                     if (parsed?.url) return parsed;
-                  } catch(_) {}
-                  // Caso 3: string que ES la URL directa
-                  if (item.startsWith('http')) return { url: item, path: '' };
-                  // Caso 4: string que ES el path en el bucket
-                  const { data: pub } = supabase.storage.from('saizu-gallery').getPublicUrl(item);
-                  return { url: pub.publicUrl, path: item };
-               }
-               return null;
-            }).filter(Boolean);
+          const reconstructedItem = {
+            id: row.item_id,
+            label: row.extra_details?.label || 'Prenda',
+            icon: row.extra_details?.icon || '🛍️',
+            sizeOpts: row.extra_details?.sizeOpts || [],
+            typeOpts: row.extra_details?.typeOpts || [],
+            cutOpts: row.extra_details?.cutOpts || []
+          };
+          newSchema[z].push(reconstructedItem);
 
-            newData[z][row.item_id] = {
-               size: row.size_value || '',
-               brands: row.brand || '',
-               cut: row.extra_details?.cut || '',
-               type: row.extra_details?.type || '',
-               colors: row.extra_details?.colors || [],
-               patterns: row.extra_details?.patterns || [],
-               gallery
-            };
-         });
-         setInventorySchema(newSchema);
-         setOutfitsData(newData);
+          const rawGallery = row.image_urls || [];
+          const gallery = rawGallery.map(item => {
+            if (item && typeof item === 'object' && item.url) return item;
+            if (typeof item === 'string') {
+              try { const p = JSON.parse(item); if (p?.url) return p; } catch(_) {}
+              if (item.startsWith('http')) return { url: item, path: '' };
+              const { data: pub } = supabase.storage.from('saizu-gallery').getPublicUrl(item);
+              return { url: pub.publicUrl, path: item };
+            }
+            return null;
+          }).filter(Boolean);
+
+          const fromDB = {
+            size: row.size_value || '',
+            brands: row.brand || '',
+            cut: row.extra_details?.cut || '',
+            type: row.extra_details?.type || '',
+            colors: row.extra_details?.colors || [],
+            patterns: row.extra_details?.patterns || [],
+            gallery
+          };
+
+          // Draft tiene prioridad sobre BD para el item específico
+          const draft = draftBuffer[z]?.[row.item_id];
+          newData[z][row.item_id] = draft ? { ...fromDB, ...draft } : fromDB;
+        });
+
+        setInventorySchema(newSchema);
+        setOutfitsData(newData);
       }
     } catch (err) {
-      console.error("Error cargando prendas del perfil: ", err);
+      console.error('Error cargando prendas del perfil: ', err);
     }
   };
 
@@ -453,10 +471,22 @@ export const SuitcaseProvider = ({ children }) => {
 
       const { error } = await supabase.from('sizes_data').insert([row]);
       if (error) throw error;
-      
+
+      // Guardar exitoso: limpiar solo este item del draft buffer
+      try {
+        const key = `saizu_draft_${activeProfileId}`;
+        const existing = JSON.parse(localStorage.getItem(key) || '{}');
+        if (existing[zone]?.[itemId]) {
+          delete existing[zone][itemId];
+          if (Object.keys(existing[zone]).length === 0) delete existing[zone];
+          if (Object.keys(existing).length === 0) localStorage.removeItem(key);
+          else localStorage.setItem(key, JSON.stringify(existing));
+        }
+      } catch(_) {}
+
       return true;
     } catch (err) {
-      console.error("Error guardando item en Supabase: ", err);
+      console.error('Error guardando item en Supabase: ', err);
       return false;
     }
   };
