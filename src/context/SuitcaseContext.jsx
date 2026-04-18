@@ -345,7 +345,9 @@ export const SuitcaseProvider = ({ children }) => {
             icon: row.extra_details?.icon || '🛍️',
             sizeOpts: row.extra_details?.sizeOpts || [],
             typeOpts: row.extra_details?.typeOpts || [],
-            cutOpts: row.extra_details?.cutOpts || []
+            cutOpts: row.extra_details?.cutOpts || [],
+            // Restaurar attrs tal como el usuario los configuró
+            attrs: row.extra_details?.attrs || undefined
           };
           newSchema[z].push(reconstructedItem);
 
@@ -450,16 +452,18 @@ export const SuitcaseProvider = ({ children }) => {
          size_value: item.size || null,
          brand: item.brands || null,
          image_urls: item.gallery || [],
-         extra_details: { 
-           cut: item.cut, 
-           type: item.type, 
-           colors: item.colors, 
+         extra_details: {
+           cut: item.cut,
+           type: item.type,
+           colors: item.colors,
            patterns: item.patterns,
            label: schemaDef?.label || 'Prenda',
            icon: schemaDef?.icon || '🛍️',
            sizeOpts: schemaDef?.sizeOpts || [],
            typeOpts: schemaDef?.typeOpts || [],
-           cutOpts: schemaDef?.cutOpts || []
+           cutOpts: schemaDef?.cutOpts || [],
+           // Persistir la elección de atributos del usuario
+           attrs: schemaDef?.attrs || undefined
          }
       };
 

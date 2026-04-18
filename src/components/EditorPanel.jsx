@@ -90,7 +90,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
   const sizes = itemConfig.sizeOpts || defaultOptions.size;
   const types = itemConfig.typeOpts || defaultOptions.type;
   const cuts = itemConfig.cutOpts || defaultOptions.cut;
-  const attrs = itemConfig.attrs || ['size', 'brands', 'colors', 'gallery'];
+  const attrs = itemConfig.attrs || ['size', 'type', 'cut', 'brands', 'colors', 'patterns', 'gallery'];
 
   return (
     <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
@@ -258,7 +258,7 @@ const EditorPanel = () => {
   // Custom item creator state
   const [isCreating, setIsCreating] = useState(false);
   const [newItemName, setNewItemName] = useState('');
-  const [selectedAttrs, setSelectedAttrs] = useState(['brands', 'colors', 'gallery']);
+  const [selectedAttrs, setSelectedAttrs] = useState([]);
 
   if (!activeZone) return null;
 
