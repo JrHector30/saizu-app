@@ -71,12 +71,21 @@ function MainInterface() {
 function AppContent() {
   const { session, loading } = useAuth();
 
-  if (loading) return <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>Cargando...</div>;
+  // Solo mostrar "Cargando..." en el arranque inicial (session todavía no se conoce)
+  if (loading && session === undefined) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>
+        Cargando...
+      </div>
+    );
+  }
 
+  // Sin sesión confirmada: mostrar Login
   if (!session) {
     return <Login />;
   }
 
+  // Si hay sesión (aunque loading sea true brevemente por re-verificación), mantener la app montada
   return (
     <SuitcaseProvider>
       <MainInterface />
