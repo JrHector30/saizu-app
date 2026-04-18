@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { COLOR_PALETTE, PATTERNS } from '../utils/wardrobeData';
 import { supabase } from '../lib/supabaseClient';
 
@@ -28,8 +28,17 @@ export const SuitcaseProvider = ({ children }) => {
   });
   
   // -- SAÍZU NETWORK --
-  const [viewingFriend, setViewingFriend] = useState(null);
+  const [viewingFriend, setViewingFriend] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saizu_viewingFriend');
+      if (saved && saved !== 'null' && saved !== 'undefined') return JSON.parse(saved);
+    } catch(e) {}
+    return null;
+  });
   const [friendsList, setFriendsList] = useState([]);
+
+  // Guard: evita que el useEffect de viewingFriend arrase el estado en el primer render
+  const isMounted = useRef(false);
   
   const [isSpinning, setIsSpinning] = useState(false);
   
@@ -61,6 +70,15 @@ export const SuitcaseProvider = ({ children }) => {
       else localStorage.removeItem('saizu_activeProfileId');
     }
   }, [activeProfileId, viewingFriend]);
+
+  useEffect(() => {
+    // Persistir viewingFriend solo si tiene datos reales
+    if (viewingFriend) {
+      localStorage.setItem('saizu_viewingFriend', JSON.stringify(viewingFriend));
+    } else {
+      localStorage.removeItem('saizu_viewingFriend');
+    }
+  }, [viewingFriend]);
 
   useEffect(() => {
     if (!viewingFriend) {
@@ -354,7 +372,12 @@ export const SuitcaseProvider = ({ children }) => {
   }, [activeProfileId]);
 
   useEffect(() => {
-    // Al cambiar el amigo visto (o volver a null): limpiar estado y recargar perfiles del nuevo target
+    // En el mount inicial, esta lógica la maneja el useEffect([]) de abajo
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+    // Al CAMBIAR el amigo (no en el primer render): limpiar y recargar
     setInventorySchema(getEmptyInventorySchema());
     setOutfitsData(getEmptyOutfitState());
     setActiveProfileId(null);
@@ -364,7 +387,14 @@ export const SuitcaseProvider = ({ children }) => {
   }, [viewingFriend]);
 
   useEffect(() => {
-    loadProfilesList(null); // Carga inicial: usuario propio
+    // Carga inicial: si había un amigo guardado, cargar sus perfiles
+    // Si no, cargar los perfiles propios respetando el activeProfileId guardado
+    const savedFriend = viewingFriend;
+    if (savedFriend?.id) {
+      loadProfilesList(savedFriend.id);
+    } else {
+      loadProfilesList(null);
+    }
   }, []);
 
   // REALTIME SUBSCRIPTION ONLY
