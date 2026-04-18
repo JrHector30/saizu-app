@@ -10,6 +10,11 @@ export const useSuitcase = () => useContext(SuitcaseContext);
 const getEmptyOutfitState = () => ({ head: {}, torso: {}, hands: {}, legs: {}, feet: {} });
 const getEmptyInventorySchema = () => ({ head: [], torso: [], hands: [], legs: [], feet: [] });
 
+// Opciones por defecto que coinciden con EditorPanel.jsx
+const DEFAULT_SIZE_OPTS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const DEFAULT_TYPE_OPTS = ['Est\u00e1ndar', 'Premium', 'Casual'];
+const DEFAULT_CUT_OPTS  = ['Slim Fit', 'Regular/Recto', 'Baggy/Oversize', 'Skinny'];
+
 export const SuitcaseProvider = ({ children }) => {
   const [activeOutfit, setActiveOutfit] = useState('ÉL');
   const [activeZone, setActiveZone] = useState(() => {
@@ -87,9 +92,31 @@ export const SuitcaseProvider = ({ children }) => {
     }
   }, [inventorySchema, outfitsData, viewingFriend]);
 
+
   // Shared Global Options State
-  const [globalColors, setGlobalColors] = useState(COLOR_PALETTE);
-  const [globalPatterns, setGlobalPatterns] = useState(PATTERNS);
+  const [globalColors, setGlobalColors] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saizu_globalColors');
+      if (saved && saved !== 'null') return JSON.parse(saved);
+    } catch(_) {}
+    return COLOR_PALETTE;
+  });
+
+  const [globalPatterns, setGlobalPatterns] = useState(() => {
+    try {
+      const saved = localStorage.getItem('saizu_globalPatterns');
+      if (saved && saved !== 'null') return JSON.parse(saved);
+    } catch(_) {}
+    return PATTERNS;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('saizu_globalColors', JSON.stringify(globalColors));
+  }, [globalColors]);
+
+  useEffect(() => {
+    localStorage.setItem('saizu_globalPatterns', JSON.stringify(globalPatterns));
+  }, [globalPatterns]);
 
   const getActiveZoneData = () => {
     if (!activeZone) return null;
@@ -459,10 +486,9 @@ export const SuitcaseProvider = ({ children }) => {
            patterns: item.patterns,
            label: schemaDef?.label || 'Prenda',
            icon: schemaDef?.icon || '🛍️',
-           sizeOpts: schemaDef?.sizeOpts || [],
-           typeOpts: schemaDef?.typeOpts || [],
-           cutOpts: schemaDef?.cutOpts || [],
-           // Persistir la elección de atributos del usuario
+           sizeOpts: (schemaDef?.sizeOpts?.length > 0) ? schemaDef.sizeOpts : DEFAULT_SIZE_OPTS,
+           typeOpts: (schemaDef?.typeOpts?.length > 0) ? schemaDef.typeOpts : DEFAULT_TYPE_OPTS,
+           cutOpts:  (schemaDef?.cutOpts?.length  > 0) ? schemaDef.cutOpts  : DEFAULT_CUT_OPTS,
            attrs: schemaDef?.attrs || undefined
          }
       };
@@ -527,9 +553,10 @@ export const SuitcaseProvider = ({ children }) => {
                     patterns: item.patterns,
                     label: schemaDef?.label || 'Prenda',
                     icon: schemaDef?.icon || '🛍️',
-                    sizeOpts: schemaDef?.sizeOpts || [],
-                    typeOpts: schemaDef?.typeOpts || [],
-                    cutOpts: schemaDef?.cutOpts || []
+                    sizeOpts: (schemaDef?.sizeOpts?.length > 0) ? schemaDef.sizeOpts : DEFAULT_SIZE_OPTS,
+                    typeOpts: (schemaDef?.typeOpts?.length > 0) ? schemaDef.typeOpts : DEFAULT_TYPE_OPTS,
+                    cutOpts:  (schemaDef?.cutOpts?.length  > 0) ? schemaDef.cutOpts  : DEFAULT_CUT_OPTS,
+                    attrs: schemaDef?.attrs || undefined
                   }
                });
             }
