@@ -368,8 +368,8 @@ export const SuitcaseProvider = ({ children }) => {
             brands: row.brand || '',
             cut: row.extra_details?.cut || '',
             type: row.extra_details?.type || '',
-            colors: row.extra_details?.colors || [],
-            patterns: row.extra_details?.patterns || [],
+            colors: Array.isArray(row.extra_details?.colors) ? row.extra_details.colors : [],
+            patterns: Array.isArray(row.extra_details?.patterns) ? row.extra_details.patterns : [],
             gallery
           };
 
@@ -508,7 +508,10 @@ export const SuitcaseProvider = ({ children }) => {
          Object.keys(outfitsData[zone]).forEach(itemId => {
             const item = outfitsData[zone][itemId];
             const schemaDef = inventorySchema[zone].find(x => x.id === itemId);
-            if (item.size || item.brands || item.colors.length > 0 || item.gallery.length > 0) {
+            const hasData = item.size || item.brands || item.cut || item.type ||
+              (item.colors?.length > 0) || (item.patterns?.length > 0) ||
+              (item.gallery?.length > 0);
+            if (hasData) {
                rows.push({
                   owner_id: userId,
                   profile_id: activeProfileId, // Vinculo esencial
