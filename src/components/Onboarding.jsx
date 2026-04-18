@@ -49,7 +49,8 @@ const Onboarding = () => {
                 owner_id: session.user.id,
                 outfit_mode: outfit,
                 profile_name: 'Armario Principal',
-                saizu_id: generateSaizuId()
+                saizu_id: generateSaizuId(),
+                display_name: 'Sin Nombre'
             });
 
             if (error) throw error;

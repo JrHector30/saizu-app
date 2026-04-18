@@ -19,11 +19,18 @@ export const AuthProvider = ({ children }) => {
         .single();
       
       if (!error && data) {
+        let updates = {};
         if (!data.saizu_id) {
           const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
-          const newId = `SAI-${randomHex}`;
-          await supabase.from('user_profiles').update({ saizu_id: newId }).eq('owner_id', userId);
-          data.saizu_id = newId;
+          updates.saizu_id = `SAI-${randomHex}`;
+          data.saizu_id = updates.saizu_id;
+        }
+        if (!data.display_name) {
+          updates.display_name = 'Sin Nombre';
+          data.display_name = updates.display_name;
+        }
+        if (Object.keys(updates).length > 0) {
+          await supabase.from('user_profiles').update(updates).eq('owner_id', userId);
         }
         setProfile(data);
       } else {

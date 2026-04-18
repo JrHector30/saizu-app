@@ -248,8 +248,11 @@ export const SuitcaseProvider = ({ children }) => {
   };
 
   const addGlobalColor = (name, hex) => {
-    const defaultColorId = name.toLowerCase().replace(/[^a-z0-9]/g, '');
-    setGlobalColors(prev => [...prev, { id: defaultColorId, hex, label: name }]);
+    const defaultColorId = `custom-${name.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now().toString().slice(-4)}`;
+    setGlobalColors(prev => {
+      if (prev.find(c => c.id === defaultColorId)) return prev;
+      return [...prev, { id: defaultColorId, hex, label: name }];
+    });
   };
 
   const addGlobalPattern = (patternName) => {
@@ -412,23 +415,27 @@ export const SuitcaseProvider = ({ children }) => {
 
         // Reconstruir opciones personalizadas del perfil cargado (sin contaminar otros perfiles)
         const customPatterns = new Set();
-        const customColors = [];
-        const customColorIds = new Set();
+        const customColorDefs = new Map(); // id -> { id, hex, label }
 
         data.forEach(row => {
+          // Patrones personalizados
           (row.extra_details?.patterns || []).forEach(p => {
             if (!PATTERNS.includes(p)) customPatterns.add(p);
           });
-          (row.extra_details?.colors || []).forEach(c => {
-            if (c?.id && !COLOR_PALETTE.find(cp => cp.id === c.id) && !customColorIds.has(c.id)) {
-              customColors.push(c);
-              customColorIds.add(c.id);
+          // Colores personalizados: leer customColorDefs guardado en extra_details
+          (row.extra_details?.customColorDefs || []).forEach(c => {
+            if (c?.id && c?.hex && !COLOR_PALETTE.find(cp => cp.id === c.id)) {
+              customColorDefs.set(c.id, c);
             }
           });
         });
 
-        setGlobalPatterns(customPatterns.size > 0 ? [...PATTERNS, ...Array.from(customPatterns)] : PATTERNS);
-        setGlobalColors(customColors.length > 0 ? [...COLOR_PALETTE, ...customColors] : COLOR_PALETTE);
+        setGlobalPatterns(
+          customPatterns.size > 0 ? [...PATTERNS, ...Array.from(customPatterns)] : PATTERNS
+        );
+        setGlobalColors(
+          customColorDefs.size > 0 ? [...COLOR_PALETTE, ...Array.from(customColorDefs.values())] : COLOR_PALETTE
+        );
 
         setInventorySchema(newSchema);
         setOutfitsData(newData);
