@@ -12,7 +12,7 @@ const ModelBackground = ({ url, isHovered }) => {
                 <Environment preset="city" />
                 <ambientLight intensity={0.5} />
                 <directionalLight castShadow position={[2, 5, 2]} intensity={1} shadow-mapSize={[1024, 1024]} />
-                
+
                 <Suspense fallback={null}>
                     <ModelErrorBoundary url={url}>
                         <AvatarModel url={url} isHovered={isHovered} />
@@ -28,7 +28,7 @@ const ModelBackground = ({ url, isHovered }) => {
 const Onboarding = () => {
     const { session, refreshProfile } = useAuth();
     const [loading, setLoading] = useState(false);
-    
+
     // Independent hover states for each panel
     const [hoverHe, setHoverHe] = useState(false);
     const [hoverShe, setHoverShe] = useState(false);
@@ -49,13 +49,12 @@ const Onboarding = () => {
                 owner_id: session.user.id,
                 outfit_mode: outfit,
                 profile_name: 'Armario Principal',
-                saizu_id: generateSaizuId(),
-                display_name: 'Sin Nombre'
+                saizu_id: generateSaizuId()
             });
 
             if (error) throw error;
-            
-            await refreshProfile(); 
+
+            await refreshProfile();
         } catch (err) {
             console.error("Error creating profile:", err);
             alert("Hubo un problema al crear tu perfil.");
@@ -73,7 +72,7 @@ const Onboarding = () => {
 
     return (
         <div className="onboarding-wrapper">
-            <div 
+            <div
                 className={`onboarding-panel panel-left ${hoverHe ? 'hovered' : ''}`}
                 onMouseEnter={() => setHoverHe(true)}
                 onMouseLeave={() => setHoverHe(false)}
@@ -82,8 +81,8 @@ const Onboarding = () => {
                 <ModelBackground url="/models/hombre/scene.gltf" isHovered={hoverHe} />
                 <div className="glass-btn">彼 (ÉL)</div>
             </div>
-            
-            <div 
+
+            <div
                 className={`onboarding-panel panel-right ${hoverShe ? 'hovered' : ''}`}
                 onMouseEnter={() => setHoverShe(true)}
                 onMouseLeave={() => setHoverShe(false)}
