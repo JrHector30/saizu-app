@@ -17,17 +17,13 @@ export const AuthProvider = ({ children }) => {
         .select('*')
         .eq('owner_id', userId)
         .single();
-      
+
       if (!error && data) {
         let updates = {};
         if (!data.saizu_id) {
           const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
           updates.saizu_id = `SAI-${randomHex}`;
           data.saizu_id = updates.saizu_id;
-        }
-        if (!data.display_name) {
-          updates.display_name = 'Sin Nombre';
-          data.display_name = updates.display_name;
         }
         if (Object.keys(updates).length > 0) {
           await supabase.from('user_profiles').update(updates).eq('owner_id', userId);
@@ -73,7 +69,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ session, profile, loading, refreshProfile }}>
-        {children}
+      {children}
     </AuthContext.Provider>
   );
 };
