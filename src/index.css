@@ -1085,54 +1085,70 @@ h1, h2, h3, h4, h5, h6 {
    ========================================= */
 @media (max-width: 768px) {
 
-  /* Body: permitir scroll vertical en móvil */
   body {
     overflow: hidden;
   }
 
-  /* ---- TÍTULO PRINCIPAL ---- */
-  .app-title {
-    font-size: 1.2rem;
-    letter-spacing: 0.05em;
-    margin-bottom: 0.5rem;
-    writing-mode: horizontal-tb; /* Evita que se ponga vertical */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-  }
-
-  /* ---- HEADER ---- */
-  .app-header {
-    padding: 1rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.25rem;
-  }
-
-  /* ---- LAYOUT PRINCIPAL ---- */
   .main-wrapper {
     width: 100vw;
-    height: 100dvh; /* dvh para móvil (respeta barra del navegador) */
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ---- RENDER DEL MANIQUÍ ---- */
+  /* Ocupa solo la mitad inferior, debajo del header y sidebar */
   .render-container {
-    top: 0;
-    height: 100dvh;
+    position: fixed;
+    top: 130px;
+    left: 0;
+    width: 100%;
+    height: calc(100dvh - 130px);
+    z-index: 1;
   }
 
-  /* ---- SIDEBAR DE PERFILES ---- */
+  /* ---- UI LAYER ---- */
+  .ui-layer {
+    flex-direction: column !important;
+    height: 100dvh;
+    position: relative;
+    z-index: 10;
+  }
+
+  /* ---- HEADER: va primero, arriba del todo ---- */
+  .app-header {
+    order: -1;
+    padding: 0.75rem 1rem;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    z-index: 20;
+    background: transparent;
+    pointer-events: none;
+  }
+
+  /* ---- TÍTULO ---- */
+  .app-title {
+    font-size: 1.3rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 0;
+    white-space: nowrap;
+  }
+
+  /* ---- SIDEBAR: va debajo del título ---- */
   .profiles-sidebar {
     width: 100%;
     height: auto;
-    max-height: 160px;
+    max-height: 80px;
     flex-direction: column;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
+    position: relative;
+    z-index: 20;
   }
 
   .profiles-list {
@@ -1140,91 +1156,78 @@ h1, h2, h3, h4, h5, h6 {
     overflow-x: auto;
     overflow-y: hidden;
     gap: 0.5rem;
-    padding-bottom: 0.25rem;
     flex-wrap: nowrap;
-    scrollbar-width: none; /* Firefox */
+    scrollbar-width: none;
   }
 
   .profiles-list::-webkit-scrollbar {
-    display: none; /* Chrome/Safari */
+    display: none;
+  }
+
+  .sidebar-title {
+    display: none; /* Ocultar "MIS OUTFITS" en móvil para ahorrar espacio */
   }
 
   .profile-btn {
     flex-shrink: 0;
-    min-width: 140px;
-    padding: 0.75rem;
-    font-size: 0.85rem;
-    transform: none;
-  }
-
-  .profile-btn:hover {
-    transform: none; /* Quita el translateX en móvil */
-  }
-
-  .sidebar-title {
-    font-size: 1rem;
-    margin-bottom: 0.75rem;
-    text-align: left;
+    min-width: 120px;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    transform: none !important;
   }
 
   .new-profile-btn {
     flex-shrink: 0;
-    min-width: 130px;
+    min-width: 120px;
     margin-top: 0;
-    padding: 0.75rem;
+    padding: 0.5rem 0.75rem;
     font-size: 0.8rem;
   }
 
-  /* ---- UI LAYER ---- */
-  .ui-layer {
-    flex-direction: column !important;
-    height: 100dvh;
-  }
-
-  /* ---- EDITOR PANEL ---- */
+  /* ---- EDITOR PANEL: sube desde abajo como sheet ---- */
   .editor-wrapper {
     position: fixed;
     bottom: 0;
     left: 0;
     right: 0;
-    top: auto;
-    width: 100%;
-    max-width: 100%;
-    max-height: 70dvh;
+    top: auto !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 65dvh;
     transform: none !important;
     border-radius: 20px 20px 0 0;
-    overflow: hidden;
     z-index: 100;
+    transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .editor-wrapper.slide-out {
-    transform: translateY(100%) !important;
-    opacity: 1;
+    transform: translateY(110%) !important;
+    opacity: 1 !important;
   }
 
   .editor-wrapper.slide-in {
     transform: translateY(0) !important;
-    opacity: 1;
+    opacity: 1 !important;
   }
 
   .editor-panel.glassmorphism {
-    max-height: 70dvh;
+    max-height: 65dvh;
     overflow-y: auto;
     border-radius: 20px 20px 0 0;
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
 
   .accordion-list {
-    max-height: calc(70dvh - 120px);
+    max-height: calc(65dvh - 100px);
   }
 
   .advanced-scroll {
-    max-height: 70dvh;
+    max-height: 65dvh;
   }
 
   /* ---- ONBOARDING ---- */
   .onboarding-wrapper {
-    flex-direction: column; /* Apila los paneles verticalmente en móvil */
+    flex-direction: column;
   }
 
   .onboarding-panel {
