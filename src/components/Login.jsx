@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleAuth = async (e) => {
         e.preventDefault();
@@ -18,7 +20,6 @@ const Login = () => {
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) throw error;
-                // redirect is automatic via AuthContext state change in App.jsx
             }
         } catch (error) {
             alert(error.error_description || error.message);
@@ -29,34 +30,60 @@ const Login = () => {
 
     return (
         <div className="login-wrapper">
+            {/* Efecto sol japonés — fondo decorativo */}
+            <div className="login-sun-bg" aria-hidden="true">
+                <div className="login-sun-circle" />
+                {Array.from({ length: 18 }).map((_, i) => (
+                    <div
+                        key={i}
+                        className="login-sun-ray"
+                        style={{ transform: `rotate(${i * 20}deg)` }}
+                    />
+                ))}
+            </div>
+
             <div className="login-container">
-                <h1 className="login-title">ログイン - Login</h1>
-                <p className="login-subtitle">Entra a tu armario personal.</p>
-                
+                <h1 className="login-title">ログイン — LOGIN</h1>
+
                 <form className="login-form" onSubmit={handleAuth}>
-                    <input 
-                        type="email" 
-                        placeholder="Correo electrónico" 
+                    <input
+                        type="email"
+                        placeholder="Correo electrónico"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="login-input"
-                        required 
+                        required
                     />
-                    <input 
-                        type="password" 
-                        placeholder="Contraseña" 
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="login-input"
-                        required 
-                    />
+
+                    <div className="login-password-wrapper">
+                        <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Contraseña"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="login-input"
+                            required
+                        />
+                        <button
+                            type="button"
+                            className="login-eye-btn"
+                            onClick={() => setShowPassword(prev => !prev)}
+                            tabIndex={-1}
+                            aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                        >
+                            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                    </div>
+
                     <button type="submit" className="login-btn" disabled={loading}>
                         {loading ? 'Cargando...' : (isSignUp ? 'Crear Perfil' : 'Ingresar')}
                     </button>
                 </form>
 
                 <button className="toggle-auth-btn" onClick={() => setIsSignUp(!isSignUp)}>
-                    {isSignUp ? '¿Ya tienes un perfil? Inicia sesión' : '¿No tienes espacio guardado? Regístrate'}
+                    {isSignUp
+                        ? '¿Ya tienes un perfil? Inicia sesión'
+                        : '¿No tienes espacio guardado? Regístrate'}
                 </button>
             </div>
         </div>
