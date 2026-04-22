@@ -823,13 +823,14 @@ h6 {
 /* --- Efecto sol japonés --- */
 .login-sun-bg {
   position: absolute;
-  bottom: -20vw;
+  bottom: -50%;
+  /* La mitad del círculo queda fuera de la pantalla */
   left: 50%;
   transform: translateX(-50%);
-  width: 140vw;
-  height: 140vw;
-  max-width: 900px;
-  max-height: 900px;
+  width: 100vw;
+  height: 100vw;
+  max-width: 800px;
+  max-height: 800px;
   pointer-events: none;
   z-index: 0;
 }
@@ -858,8 +859,10 @@ h6 {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  /* Empujado hacia arriba para no tapar el sol */
-  margin-bottom: 18vw;
+  margin-bottom: 0;
+  /* Sin margen extra */
+  margin-top: -10vh;
+  /* Sube el formulario hacia arriba */
 }
 
 .login-title {
@@ -981,9 +984,10 @@ h6 {
 /* ---- LOGIN MÓVIL ---- */
 @media (max-width: 768px) {
   .login-container {
-    padding: 2rem 1.5rem 1.5rem;
+    padding: 2rem 1.5rem;
     max-width: 100%;
-    margin-bottom: 40vw;
+    margin-top: -5vh;
+    margin-bottom: 0;
   }
 
   .login-title {
@@ -991,9 +995,9 @@ h6 {
   }
 
   .login-sun-bg {
-    width: 200vw;
-    height: 200vw;
-    bottom: -30vw;
+    bottom: -45%;
+    width: 130vw;
+    height: 130vw;
   }
 }
 
