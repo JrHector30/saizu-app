@@ -1,5 +1,5 @@
-const CACHE_NAME = 'saizu-v1';
-const STATIC_ASSETS = ['/', '/index.html'];
+const CACHE_NAME = 'saizu-v2';
+const STATIC_ASSETS = ['/', '/index.html', '/manifest.json', '/icon-32.ico', '/icon-192.png', '/icon-512.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
