@@ -1224,52 +1224,94 @@ h6 {
     white-space: nowrap;
   }
 
-  /* ---- SIDEBAR: va debajo del título ---- */
+  /* ---- SIDEBAR DRAWER MÓVIL ---- */
   .profiles-sidebar {
     width: 100%;
     height: auto;
-    max-height: 80px;
-    flex-direction: column;
-    padding: 0.5rem 1rem;
+    padding: 0;
     border-right: none;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     overflow: hidden;
     position: relative;
     z-index: 20;
+    transition: none;
+  }
+
+  /* Barra superior siempre visible */
+  .sidebar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    min-height: 52px;
+    user-select: none;
+  }
+
+  .sidebar-topbar-left {
+    flex: 1;
+    overflow: hidden;
+  }
+
+  .sidebar-title {
+    font-size: 0.9rem;
+    margin-bottom: 0;
+    text-align: left;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  /* Chevron animado */
+  .sidebar-chevron {
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+  }
+
+  .sidebar-chevron.rotated {
+    transform: rotate(180deg);
+  }
+
+  /* Contenido del drawer: oculto por defecto */
+  .sidebar-drawer-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  /* Cuando está expandido */
+  .profiles-sidebar.expanded .sidebar-drawer-content {
+    max-height: 60dvh;
+    overflow-y: auto;
   }
 
   .profiles-list {
-    flex-direction: row;
-    overflow-x: auto;
-    overflow-y: hidden;
+    flex-direction: column;
+    overflow-x: hidden;
+    overflow-y: auto;
     gap: 0.5rem;
     flex-wrap: nowrap;
-    scrollbar-width: none;
+    padding: 0.5rem 1rem 1rem 1rem;
   }
 
   .profiles-list::-webkit-scrollbar {
     display: none;
   }
 
-  .sidebar-title {
-    display: none;
-    /* Ocultar "MIS OUTFITS" en móvil para ahorrar espacio */
-  }
-
   .profile-btn {
-    flex-shrink: 0;
-    min-width: 120px;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
+    width: 100%;
+    min-width: unset;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
     transform: none !important;
   }
 
   .new-profile-btn {
-    flex-shrink: 0;
-    min-width: 120px;
-    margin-top: 0;
-    padding: 0.5rem 0.75rem;
-    font-size: 0.8rem;
+    width: 100%;
+    min-width: unset;
+    margin-top: 0.5rem;
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
   }
 
   /* ---- EDITOR PANEL: sube desde abajo como sheet ---- */
