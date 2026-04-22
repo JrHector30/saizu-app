@@ -11,7 +11,7 @@ import UserMenu from './components/UserMenu';
 
 function MainInterface() {
   const { activeZone, activeProfileId, setActiveOutfit, viewingFriend, setViewingFriend } = useSuitcase();
-  const { profile } = useAuth();
+  const { profile, loading } = useAuth();
 
   useEffect(() => {
     if (profile) {
@@ -23,25 +23,24 @@ function MainInterface() {
     <div className="main-wrapper">
       <RenderMannequin />
 
-      {!profile ? (
+      {loading ? null : !profile ? (
         <Onboarding />
       ) : (
-        <div className="ui-layer" style={{ display: 'flex', flexDirection: 'row', width: '100%', height: '100%' }}>
+        <div className="ui-layer">
 
-          <header className="app-header" style={{ position: 'absolute', width: '100%', pointerEvents: 'none' }}>
+          {/* HEADER — siempre primero en el DOM */}
+          <header className="app-header">
             <h1 className="app-title">サイズ - Saizu</h1>
             <div style={{ pointerEvents: 'auto' }}>
               <UserMenu />
             </div>
           </header>
 
-
+          {/* SIDEBAR — debajo del header */}
           <ProfilesSidebar />
 
-          {/* Center Space where the Avatar is (transparent) */}
-          <div style={{ flex: 1, position: 'relative', pointerEvents: 'none' }}>
-
-            {/* Botón flotante para regresar si estoy viendo a un amigo */}
+          {/* ÁREA CENTRAL — transparente, solo para editor y botón amigo */}
+          <div className="center-area">
             {viewingFriend && (
               <div style={{ position: 'absolute', bottom: '2rem', left: '50%', transform: 'translateX(-50%)', zIndex: 50, pointerEvents: 'auto' }}>
                 <button
@@ -58,7 +57,6 @@ function MainInterface() {
               </div>
             )}
 
-            {/* Right Editor Panel */}
             <div className={`editor-wrapper ${activeZone ? 'slide-in' : 'slide-out'}`} style={{ pointerEvents: activeZone ? 'auto' : 'none' }}>
               {activeZone && <EditorPanel />}
             </div>
