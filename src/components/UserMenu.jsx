@@ -157,7 +157,7 @@ const UserMenu = () => {
   };
 
   return (
-    <div style={{ position: 'absolute', top: '1rem', right: '1rem', zIndex: 60 }}>
+    <div style={{ position: 'fixed', top: '1rem', right: '1rem', zIndex: 200 }}>
       {/* Botón Circular Glass */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -180,8 +180,12 @@ const UserMenu = () => {
       {/* Popover */}
       {isOpen && (
         <div style={{
-          position: 'absolute', top: '55px', right: '0',
-          width: '300px',
+          position: 'fixed',
+          top: '60px',
+          right: '1rem',
+          width: 'min(300px, calc(100vw - 2rem))',
+          maxHeight: '80dvh',
+          overflowY: 'auto',
           background: 'rgba(15, 15, 15, 0.75)',
           backdropFilter: 'blur(16px)',
           border: '1px solid rgba(255, 255, 255, 0.1)',
@@ -189,7 +193,8 @@ const UserMenu = () => {
           padding: '1.5rem',
           color: '#fff',
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          display: 'flex', flexDirection: 'column', gap: '1.5rem'
+          display: 'flex', flexDirection: 'column', gap: '1.5rem',
+          zIndex: 200
         }}>
 
           {/* Header ID */}
