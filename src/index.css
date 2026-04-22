@@ -1002,26 +1002,60 @@ h6 {
   margin: auto;
 }
 
-/* =========== DYNAMIC PROFILES SIDEBAR =========== */
+/* =========== SIDEBAR — BASE (PC) =========== */
 .profiles-sidebar {
   width: 280px;
-  max-width: 100%;
+  min-width: 280px;
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 2rem 1.5rem;
   z-index: 50;
   box-sizing: border-box;
+  transition: width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              min-width 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.glass-panel-dark {
-  background: rgba(255, 255, 255, 0.05);
-  /* Premium glassmorphism */
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  /* Softer shadow to feel floating */
+/* Sidebar colapsado en PC: solo iconos */
+.profiles-sidebar.collapsed {
+  width: 64px;
+  min-width: 64px;
+}
+
+/* Ocultar versión móvil en PC */
+.sidebar-mobile { display: none; }
+
+/* Mostrar versión PC */
+.sidebar-desktop {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 2rem 1.5rem;
+}
+
+.profiles-sidebar.collapsed .sidebar-desktop {
+  padding: 2rem 0.75rem;
+  align-items: center;
+}
+
+/* Botón colapsar */
+.sidebar-collapse-btn {
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s ease;
+  align-self: flex-end;
+}
+
+.sidebar-collapse-btn:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
 }
 
 .sidebar-title {
@@ -1046,34 +1080,52 @@ h6 {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
   padding: 1rem;
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.3s ease;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255,255,255,0.7);
   font-family: var(--font-body);
   font-weight: 600;
+  gap: 0.75rem;
 }
 
 .profile-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255,255,255,0.1);
   color: #fff;
   transform: translateX(4px);
 }
 
 .profile-btn.active {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255,255,255,0.15);
+  border-color: rgba(255,255,255,0.5);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* En collapsed, centrar el icono */
+.profiles-sidebar.collapsed .profile-btn {
+  justify-content: center;
+  padding: 0.75rem;
+  transform: none !important;
+}
+
+.profiles-sidebar.collapsed .profile-btn:hover {
+  transform: none !important;
+}
+
+.collapsed-add {
+  width: 100%;
+  font-size: 1.2rem;
+  padding: 0.5rem !important;
 }
 
 .delete-profile-btn {
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255,255,255,0.3);
   font-size: 1rem;
   cursor: pointer;
   padding: 0.2rem 0.5rem;
@@ -1083,14 +1135,14 @@ h6 {
 
 .delete-profile-btn:hover {
   color: #ff4757;
-  background: rgba(255, 71, 87, 0.1);
+  background: rgba(255,71,87,0.1);
 }
 
 .new-profile-btn {
   width: 100%;
   background: transparent;
-  border: 1px dashed rgba(255, 255, 255, 0.3);
-  color: rgba(255, 255, 255, 0.6);
+  border: 1px dashed rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.6);
   padding: 1rem;
   border-radius: 12px;
   cursor: pointer;
@@ -1101,10 +1153,15 @@ h6 {
 }
 
 .new-profile-btn:hover {
-  border-color: rgba(255, 255, 255, 0.8);
+  border-color: rgba(255,255,255,0.8);
   color: #fff;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255,255,255,0.05);
 }
+
+/* Ocultar topbar y drawer fuera de móvil */
+.sidebar-topbar { display: none; }
+.sidebar-drawer-content { display: none; }
+.sidebar-chevron { display: none; }
 
 .profile-create-form {
   margin-top: 1rem;
@@ -1224,20 +1281,26 @@ h6 {
     white-space: nowrap;
   }
 
-  /* ---- SIDEBAR DRAWER MÓVIL ---- */
+  /* ---- SIDEBAR MÓVIL ---- */
   .profiles-sidebar {
-    width: 100%;
+    width: 100% !important;
+    min-width: unset !important;
     height: auto;
     padding: 0;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    overflow: hidden;
-    position: relative;
-    z-index: 20;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     transition: none;
   }
 
-  /* Barra superior siempre visible */
+  /* Ocultar versión PC en móvil */
+  .sidebar-desktop { display: none !important; }
+
+  /* Mostrar versión móvil */
+  .sidebar-mobile {
+    display: block;
+    width: 100%;
+  }
+
   .sidebar-topbar {
     display: flex;
     align-items: center;
@@ -1258,12 +1321,11 @@ h6 {
     margin-bottom: 0;
     text-align: left;
     color: rgba(255,255,255,0.8);
-    text-transform: uppercase;
     letter-spacing: 0.05em;
   }
 
-  /* Chevron animado */
   .sidebar-chevron {
+    display: block;
     transition: transform 0.3s ease;
     flex-shrink: 0;
   }
@@ -1272,14 +1334,13 @@ h6 {
     transform: rotate(180deg);
   }
 
-  /* Contenido del drawer: oculto por defecto */
   .sidebar-drawer-content {
+    display: block;
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.35s cubic-bezier(0.22, 1, 0.36, 1);
   }
 
-  /* Cuando está expandido */
   .profiles-sidebar.expanded .sidebar-drawer-content {
     max-height: 60dvh;
     overflow-y: auto;
@@ -1288,14 +1349,9 @@ h6 {
   .profiles-list {
     flex-direction: column;
     overflow-x: hidden;
-    overflow-y: auto;
     gap: 0.5rem;
     flex-wrap: nowrap;
     padding: 0.5rem 1rem 1rem 1rem;
-  }
-
-  .profiles-list::-webkit-scrollbar {
-    display: none;
   }
 
   .profile-btn {
@@ -1303,6 +1359,10 @@ h6 {
     min-width: unset;
     padding: 0.85rem 1rem;
     font-size: 0.9rem;
+    transform: none !important;
+  }
+
+  .profile-btn:hover {
     transform: none !important;
   }
 
