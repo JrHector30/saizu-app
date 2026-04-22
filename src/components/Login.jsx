@@ -8,14 +8,26 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    const [displayName, setDisplayName] = useState('');
 
     const handleAuth = async (e) => {
         e.preventDefault();
         setLoading(true);
         try {
             if (isSignUp) {
-                const { error } = await supabase.auth.signUp({ email, password });
+                const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) throw error;
+
+                // Si el registro fue exitoso y tenemos usuario, guardar el nombre
+                if (data?.user) {
+                    await supabase.from('user_profiles').upsert({
+                        owner_id: data.user.id,
+                        profile_name: displayName.trim() || 'Sin Nombre',
+                        outfit_mode: 'ÉL', // valor temporal, se actualiza en Onboarding
+                        saizu_id: `SAI-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+                    }, { onConflict: 'owner_id', ignoreDuplicates: false });
+                }
+
                 alert("Verifica tu correo para confirmar el registro.");
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -46,6 +58,17 @@ const Login = () => {
                 <h1 className="login-title">ログイン — LOGIN</h1>
 
                 <form className="login-form" onSubmit={handleAuth}>
+                    {isSignUp && (
+                        <input
+                            type="text"
+                            placeholder="Tu nombre"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            className="login-input"
+                            maxLength={30}
+                            required={isSignUp}
+                        />
+                    )}
                     <input
                         type="email"
                         placeholder="Correo electrónico"
@@ -80,7 +103,10 @@ const Login = () => {
                     </button>
                 </form>
 
-                <button className="toggle-auth-btn" onClick={() => setIsSignUp(!isSignUp)}>
+                <button className="toggle-auth-btn" onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setDisplayName(''); // limpiar al cambiar modo
+                }}>
                     {isSignUp
                         ? '¿Ya tienes un perfil? Inicia sesión'
                         : '¿No tienes espacio guardado? Regístrate'}

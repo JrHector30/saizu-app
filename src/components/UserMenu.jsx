@@ -93,12 +93,16 @@ const UserMenu = () => {
         .from('user_profiles')
         .update({ profile_name: editNameValue.trim() })
         .eq('owner_id', profile.owner_id);
+
       if (error) throw error;
-      // Actualizar estado local inmediatamente (no esperar re-fetch)
+
+      // Actualizar estado local inmediatamente
       setLocalProfileName(editNameValue.trim());
       setIsEditingName(false);
-      alert('Perfil actualizado ✓');
-      refreshProfile(); // Sync en segundo plano
+
+      // Forzar re-fetch del profile en AuthContext para sync global
+      await refreshProfile();
+
     } catch (e) {
       console.error('saveDisplayName error:', e);
       alert('Error al guardar: ' + e.message);
