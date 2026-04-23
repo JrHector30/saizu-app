@@ -14,10 +14,10 @@ function MainInterface() {
   const { profile, loading } = useAuth();
 
   useEffect(() => {
-    if (profile) {
+    if (profile?.outfit_mode) {
       setActiveOutfit(profile.outfit_mode);
     }
-  }, [profile, setActiveOutfit]);
+  }, [profile?.outfit_mode, setActiveOutfit]);
 
   return (
     <div className="main-wrapper">

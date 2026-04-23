@@ -83,6 +83,7 @@ const Login = () => {
                             onChange={(e) => setPassword(e.target.value)}
                             className="login-input"
                             required
+                            autoComplete="new-password"
                         />
                         <button
                             type="button"
@@ -106,7 +107,7 @@ const Login = () => {
                 }}>
                     {isSignUp
                         ? '¿Ya tienes un perfil? Inicia sesión'
-                        : '¿No tienes espacio guardado? Regístrate'}
+                        : '¿No tienes una cuenta en Saizu? Regístrate'}
                 </button>
             </div>
         </div>

@@ -13,53 +13,53 @@ const getEmptyInventorySchema = () => ({ head: [], torso: [], hands: [], legs: [
 // Opciones por defecto que coinciden con EditorPanel.jsx
 const DEFAULT_SIZE_OPTS = ['XXS', 'XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const DEFAULT_TYPE_OPTS = ['Est\u00e1ndar', 'Premium', 'Casual'];
-const DEFAULT_CUT_OPTS  = ['Slim Fit', 'Regular/Recto', 'Baggy/Oversize', 'Skinny'];
+const DEFAULT_CUT_OPTS = ['Slim Fit', 'Regular/Recto', 'Baggy/Oversize', 'Skinny'];
 
 export const SuitcaseProvider = ({ children }) => {
-  const [activeOutfit, setActiveOutfit] = useState('ÉL');
+  const [activeOutfit, setActiveOutfit] = useState(null);
   const [activeZone, setActiveZone] = useState(() => {
     const saved = localStorage.getItem('saizu_activeZone');
     return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
   });
-  const [activeZoneData, setActiveZoneData] = useState([]); 
-  
+  const [activeZoneData, setActiveZoneData] = useState([]);
+
   // NEW DYNAMIC PROFILES
   const [profilesList, setProfilesList] = useState([]);
   const [activeProfileId, setActiveProfileId] = useState(() => {
     try {
       const saved = localStorage.getItem('saizu_activeProfileId');
       return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
-    } catch(e) { return null; }
+    } catch (e) { return null; }
   });
-  
+
   // -- SAÍZU NETWORK --
   const [viewingFriend, setViewingFriend] = useState(() => {
     try {
       const saved = localStorage.getItem('saizu_viewingFriend');
       if (saved && saved !== 'null' && saved !== 'undefined') return JSON.parse(saved);
-    } catch(e) {}
+    } catch (e) { }
     return null;
   });
   const [friendsList, setFriendsList] = useState([]);
 
   // Guard: evita que el useEffect de viewingFriend arrase el estado en el primer render
   const isMounted = useRef(false);
-  
+
   const [isSpinning, setIsSpinning] = useState(false);
-  
+
   // They start completely empty or from draft memory
   const [inventorySchema, setInventorySchema] = useState(() => {
     try {
       const saved = localStorage.getItem('saizu_inventorySchema');
       if (saved && saved !== 'null' && saved !== 'undefined') return JSON.parse(saved) || getEmptyInventorySchema();
-    } catch(e){}
+    } catch (e) { }
     return getEmptyInventorySchema();
   });
   const [outfitsData, setOutfitsData] = useState(() => {
     try {
       const saved = localStorage.getItem('saizu_outfitsData');
       if (saved && saved !== 'null' && saved !== 'undefined') return JSON.parse(saved) || getEmptyOutfitState();
-    } catch(e){}
+    } catch (e) { }
     return getEmptyOutfitState();
   });
 
@@ -134,7 +134,7 @@ export const SuitcaseProvider = ({ children }) => {
             [field]: value
           };
           localStorage.setItem(key, JSON.stringify(existing));
-        } catch(_) {}
+        } catch (_) { }
       }
       return updated;
     });
@@ -143,7 +143,7 @@ export const SuitcaseProvider = ({ children }) => {
   // CRUD: Add a newly crafted custom item
   const addCustomItem = (newItemSchema) => {
     if (!activeZone) return;
-    
+
     setInventorySchema(prev => {
       const cloned = { ...prev };
       cloned[activeZone] = [...cloned[activeZone], newItemSchema];
@@ -195,8 +195,8 @@ export const SuitcaseProvider = ({ children }) => {
           if (Object.keys(existing).length === 0) localStorage.removeItem(key);
           else localStorage.setItem(key, JSON.stringify(existing));
         }
-      } catch(_) {}
-    } catch(err) {
+      } catch (_) { }
+    } catch (err) {
       console.error('Error eliminando prenda de Supabase:', err);
     }
   };
@@ -204,7 +204,7 @@ export const SuitcaseProvider = ({ children }) => {
   // Dynamic Options: Add a new option
   const addItemOption = (itemId, optField, newValue) => {
     if (!activeZone) return;
-    
+
     setInventorySchema(prev => {
       const cloned = { ...prev };
       cloned[activeZone] = cloned[activeZone].map(item => {
@@ -220,7 +220,7 @@ export const SuitcaseProvider = ({ children }) => {
       });
       return cloned;
     });
-    
+
     const dataFieldMap = { 'sizeOpts': 'size', 'typeOpts': 'type', 'cutOpts': 'cut' };
     if (dataFieldMap[optField]) {
       updateItemData(itemId, dataFieldMap[optField], newValue);
@@ -298,7 +298,7 @@ export const SuitcaseProvider = ({ children }) => {
         .select('*')
         .eq('owner_id', targetOwnerId)
         .order('created_at', { ascending: true });
-      
+
       if (error) throw error;
       setProfilesList(data || []);
 
@@ -321,7 +321,7 @@ export const SuitcaseProvider = ({ children }) => {
         profile_name: profileName,
         icon: iconName
       }).select().single();
-      
+
       if (error) throw error;
       setProfilesList(prev => [...prev, data]);
       setActiveProfileId(data.id);
@@ -336,10 +336,10 @@ export const SuitcaseProvider = ({ children }) => {
     try {
       const { error } = await supabase.from('outfit_profiles').delete().eq('id', profileId);
       if (error) throw error;
-      
+
       setProfilesList(prev => prev.filter(p => p.id !== profileId));
       if (activeProfileId === profileId) {
-        setActiveProfileId(null); 
+        setActiveProfileId(null);
       }
     } catch (e) {
       console.error("Error deleting profile:", e);
@@ -364,7 +364,7 @@ export const SuitcaseProvider = ({ children }) => {
       try {
         const raw = localStorage.getItem(`saizu_draft_${activeProfileId}`);
         if (raw) draftBuffer = JSON.parse(raw) || {};
-      } catch(_) {}
+      } catch (_) { }
 
       if (data && data.length > 0) {
         let newSchema = getEmptyInventorySchema();
@@ -390,7 +390,7 @@ export const SuitcaseProvider = ({ children }) => {
           const gallery = rawGallery.map(item => {
             if (item && typeof item === 'object' && item.url) return item;
             if (typeof item === 'string') {
-              try { const p = JSON.parse(item); if (p?.url) return p; } catch(_) {}
+              try { const p = JSON.parse(item); if (p?.url) return p; } catch (_) { }
               if (item.startsWith('http')) return { url: item, path: '' };
               const { data: pub } = supabase.storage.from('saizu-gallery').getPublicUrl(item);
               return { url: pub.publicUrl, path: item };
@@ -498,31 +498,31 @@ export const SuitcaseProvider = ({ children }) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return false;
-      
+
       const userId = user.user.id;
       const item = outfitsData[zone][itemId];
       const schemaDef = inventorySchema[zone].find(x => x.id === itemId);
 
       const row = {
-         owner_id: userId,
-         profile_id: activeProfileId,
-         zone: zone,
-         item_id: itemId,
-         size_value: item.size || null,
-         brand: item.brands || null,
-         image_urls: item.gallery || [],
-         extra_details: {
-           cut: item.cut,
-           type: item.type,
-           colors: item.colors,
-           patterns: item.patterns,
-           label: schemaDef?.label || 'Prenda',
-           icon: schemaDef?.icon || '🛍️',
-           sizeOpts: (schemaDef?.sizeOpts?.length > 0) ? schemaDef.sizeOpts : DEFAULT_SIZE_OPTS,
-           typeOpts: (schemaDef?.typeOpts?.length > 0) ? schemaDef.typeOpts : DEFAULT_TYPE_OPTS,
-           cutOpts:  (schemaDef?.cutOpts?.length  > 0) ? schemaDef.cutOpts  : DEFAULT_CUT_OPTS,
-           attrs: schemaDef?.attrs || undefined
-         }
+        owner_id: userId,
+        profile_id: activeProfileId,
+        zone: zone,
+        item_id: itemId,
+        size_value: item.size || null,
+        brand: item.brands || null,
+        image_urls: item.gallery || [],
+        extra_details: {
+          cut: item.cut,
+          type: item.type,
+          colors: item.colors,
+          patterns: item.patterns,
+          label: schemaDef?.label || 'Prenda',
+          icon: schemaDef?.icon || '🛍️',
+          sizeOpts: (schemaDef?.sizeOpts?.length > 0) ? schemaDef.sizeOpts : DEFAULT_SIZE_OPTS,
+          typeOpts: (schemaDef?.typeOpts?.length > 0) ? schemaDef.typeOpts : DEFAULT_TYPE_OPTS,
+          cutOpts: (schemaDef?.cutOpts?.length > 0) ? schemaDef.cutOpts : DEFAULT_CUT_OPTS,
+          attrs: schemaDef?.attrs || undefined
+        }
       };
 
       // Limpia solo el item específico antes de recrear (Upsert sin PK)
@@ -544,7 +544,7 @@ export const SuitcaseProvider = ({ children }) => {
           if (Object.keys(existing).length === 0) localStorage.removeItem(key);
           else localStorage.setItem(key, JSON.stringify(existing));
         }
-      } catch(_) {}
+      } catch (_) { }
 
       return true;
     } catch (err) {
@@ -558,41 +558,41 @@ export const SuitcaseProvider = ({ children }) => {
     try {
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) return;
-      
+
       const userId = user.user.id;
       const rows = [];
 
       Object.keys(outfitsData).forEach(zone => {
-         Object.keys(outfitsData[zone]).forEach(itemId => {
-            const item = outfitsData[zone][itemId];
-            const schemaDef = inventorySchema[zone].find(x => x.id === itemId);
-            const hasData = item.size || item.brands || item.cut || item.type ||
-              (item.colors?.length > 0) || (item.patterns?.length > 0) ||
-              (item.gallery?.length > 0);
-            if (hasData) {
-               rows.push({
-                  owner_id: userId,
-                  profile_id: activeProfileId, // Vinculo esencial
-                  zone: zone,
-                  item_id: itemId,
-                  size_value: item.size,
-                  brand: item.brands,
-                  image_urls: item.gallery,
-                  extra_details: { 
-                    cut: item.cut, 
-                    type: item.type, 
-                    colors: item.colors, 
-                    patterns: item.patterns,
-                    label: schemaDef?.label || 'Prenda',
-                    icon: schemaDef?.icon || '🛍️',
-                    sizeOpts: (schemaDef?.sizeOpts?.length > 0) ? schemaDef.sizeOpts : DEFAULT_SIZE_OPTS,
-                    typeOpts: (schemaDef?.typeOpts?.length > 0) ? schemaDef.typeOpts : DEFAULT_TYPE_OPTS,
-                    cutOpts:  (schemaDef?.cutOpts?.length  > 0) ? schemaDef.cutOpts  : DEFAULT_CUT_OPTS,
-                    attrs: schemaDef?.attrs || undefined
-                  }
-               });
-            }
-         });
+        Object.keys(outfitsData[zone]).forEach(itemId => {
+          const item = outfitsData[zone][itemId];
+          const schemaDef = inventorySchema[zone].find(x => x.id === itemId);
+          const hasData = item.size || item.brands || item.cut || item.type ||
+            (item.colors?.length > 0) || (item.patterns?.length > 0) ||
+            (item.gallery?.length > 0);
+          if (hasData) {
+            rows.push({
+              owner_id: userId,
+              profile_id: activeProfileId, // Vinculo esencial
+              zone: zone,
+              item_id: itemId,
+              size_value: item.size,
+              brand: item.brands,
+              image_urls: item.gallery,
+              extra_details: {
+                cut: item.cut,
+                type: item.type,
+                colors: item.colors,
+                patterns: item.patterns,
+                label: schemaDef?.label || 'Prenda',
+                icon: schemaDef?.icon || '🛍️',
+                sizeOpts: (schemaDef?.sizeOpts?.length > 0) ? schemaDef.sizeOpts : DEFAULT_SIZE_OPTS,
+                typeOpts: (schemaDef?.typeOpts?.length > 0) ? schemaDef.typeOpts : DEFAULT_TYPE_OPTS,
+                cutOpts: (schemaDef?.cutOpts?.length > 0) ? schemaDef.cutOpts : DEFAULT_CUT_OPTS,
+                attrs: schemaDef?.attrs || undefined
+              }
+            });
+          }
+        });
       });
 
       // Limpia todo este profile antes de insertar (simulando upsert completo por delete-insert)
@@ -602,7 +602,7 @@ export const SuitcaseProvider = ({ children }) => {
         const { error } = await supabase.from('sizes_data').insert(rows);
         if (error) throw error;
       }
-      
+
       alert(`¡Perfil guardado con éxito!`);
 
     } catch (err) {
@@ -642,7 +642,7 @@ export const SuitcaseProvider = ({ children }) => {
         activeProfileId,
         setActiveProfileId,
         createNewProfile,
-        deleteProfile 
+        deleteProfile
       }}
     >
       {children}

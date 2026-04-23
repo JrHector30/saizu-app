@@ -936,6 +936,13 @@ h6 {
   color: var(--text-main);
 }
 
+/* Ocultar ojo nativo del navegador */
+.login-input::-ms-reveal,
+.login-input::-ms-clear,
+.login-input::-webkit-credentials-auto-fill-button {
+  display: none;
+}
+
 .login-btn {
   margin-top: 0.5rem;
   width: 100%;
@@ -1008,7 +1015,7 @@ h6 {
   z-index: 50;
   display: flex;
   pointer-events: auto;
-  background: white;
+  background: rgb(0, 0, 0);
   /* Base background so they don't see the app behind */
 }
 
@@ -1055,7 +1062,7 @@ h6 {
   z-index: 10;
   font-family: var(--font-title);
   font-size: 2.5rem;
-  color: #000000;
+  color: #FFFFFF;
   padding: 2.5rem 5rem;
   border-radius: 20px;
 
