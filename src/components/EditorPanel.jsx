@@ -243,7 +243,7 @@ const PRESET_ATTRS = [
 ];
 
 const EditorPanel = () => {
-  const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, addCustomItem, deleteCustomItem, viewingFriend } = useSuitcase();
+  const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, addCustomItem, deleteCustomItem, viewingFriend, activeProfileId } = useSuitcase();
   const friendName = viewingFriend?.profile_name || viewingFriend?.saizu_id || null;
   const [openAccordion, setOpenAccordion] = useState(() => {
     const saved = localStorage.getItem('saizu_openAccordion');
@@ -308,7 +308,17 @@ const EditorPanel = () => {
       </div>
 
       <div className="custom-item-creator">
-        {!viewingFriend && (
+        {!viewingFriend && !activeProfileId && (
+          <p style={{
+            fontSize: '0.8rem',
+            color: 'rgba(255,255,255,0.4)',
+            textAlign: 'center',
+            padding: '0.5rem 0'
+          }}>
+            Crea un perfil primero para agregar prendas.
+          </p>
+        )}
+        {!viewingFriend && activeProfileId && (
           !isCreating ? (
             <button className="add-new-btn" onClick={() => setIsCreating(true)}>
               <Plus size={16} /> Agregar Nueva Prenda
