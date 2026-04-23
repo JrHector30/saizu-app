@@ -25,7 +25,7 @@ const OptionsSelector = ({ label, options, selectedValue, onSelect, onAdd, onRem
   const [deletingVal, setDeletingVal] = useState(null);
 
   const handleAdd = () => {
-    if(newVal.trim()) {
+    if (newVal.trim()) {
       onAdd(newVal.trim());
       setNewVal('');
       setIsAdding(false);
@@ -38,38 +38,38 @@ const OptionsSelector = ({ label, options, selectedValue, onSelect, onAdd, onRem
       <div className="options-grid">
         {options.map(opt => (
           <div key={opt} className={`option-square-wrapper ${selectedValue === opt ? 'selected' : ''}`}>
-             <button 
-                type="button"
-                className="option-square"
-                onClick={() => !readOnly && onSelect(opt)}
-                disabled={readOnly}
-                style={{ cursor: readOnly ? 'default' : 'pointer' }}
-             >
-               {opt}
-             </button>
-             {selectedValue === opt && !readOnly && (
-               <button type="button" className="del-mini-btn" onClick={(e) => { e.stopPropagation(); setDeletingVal(opt); }}><X size={10}/></button>
-             )}
+            <button
+              type="button"
+              className="option-square"
+              onClick={() => !readOnly && onSelect(opt)}
+              disabled={readOnly}
+              style={{ cursor: readOnly ? 'default' : 'pointer' }}
+            >
+              {opt}
+            </button>
+            {selectedValue === opt && !readOnly && (
+              <button type="button" className="del-mini-btn" onClick={(e) => { e.stopPropagation(); setDeletingVal(opt); }}><X size={10} /></button>
+            )}
           </div>
         ))}
         {!isAdding && !readOnly && (
           <button type="button" className="option-square add-new-square" onClick={() => setIsAdding(true)}>
-             <Plus size={14} />
+            <Plus size={14} />
           </button>
         )}
       </div>
       {isAdding && (
         <div className="inline-add-form">
-          <input type="text" value={newVal} onChange={e => setNewVal(e.target.value)} placeholder="Nueva opción" className="styled-input mini"/>
-          <button type="button" onClick={handleAdd} className="confirm-btn mini"><Check size={14}/></button>
-          <button type="button" onClick={() => setIsAdding(false)} className="cancel-btn mini"><X size={14}/></button>
+          <input type="text" value={newVal} onChange={e => setNewVal(e.target.value)} placeholder="Nueva opción" className="styled-input mini" />
+          <button type="button" onClick={handleAdd} className="confirm-btn mini"><Check size={14} /></button>
+          <button type="button" onClick={() => setIsAdding(false)} className="cancel-btn mini"><X size={14} /></button>
         </div>
       )}
       {deletingVal && (
         <div className="inline-delete-form">
           <span>¿Borrar "{deletingVal}"?</span>
           <button type="button" onClick={() => { onRemove(deletingVal); setDeletingVal(null); }} className="confirm-btn mini alert"><Check size={14} /></button>
-          <button type="button" onClick={() => setDeletingVal(null)} className="cancel-btn mini"><X size={14}/></button>
+          <button type="button" onClick={() => setDeletingVal(null)} className="cancel-btn mini"><X size={14} /></button>
         </div>
       )}
     </div>
@@ -99,16 +99,16 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
         <div className="accordion-actions">
           {!viewingFriend && (
             <>
-              <Pencil 
-                size={16} 
-                className="edit-icon" 
-                onClick={(e) => { e.stopPropagation(); setIsEditing(!isEditing); }} 
+              <Pencil
+                size={16}
+                className="edit-icon"
+                onClick={(e) => { e.stopPropagation(); setIsEditing(!isEditing); }}
                 style={{ cursor: 'pointer', opacity: isEditing ? 1 : 0.6 }}
               />
-              <Trash2 
-                size={16} 
-                className="delete-icon" 
-                onClick={(e) => { e.stopPropagation(); onDelete(itemConfig.id); }} 
+              <Trash2
+                size={16}
+                className="delete-icon"
+                onClick={(e) => { e.stopPropagation(); onDelete(itemConfig.id); }}
                 style={{ cursor: 'pointer' }}
               />
             </>
@@ -119,37 +119,37 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
       {isOpen && (
         <div className="accordion-content" style={{ opacity: localReadOnly ? 0.7 : 1, pointerEvents: localReadOnly ? 'none' : 'auto' }}>
           {attrs.includes('size') && (
-            <OptionsSelector 
-              label="Talla" 
-              options={sizes} 
-              selectedValue={itemState.size} 
-              onSelect={(val) => updateItemData(itemConfig.id, 'size', val === itemState.size ? '' : val)} 
-              onAdd={(val) => addItemOption(itemConfig.id, 'sizeOpts', val)} 
-              onRemove={(val) => removeItemOption(itemConfig.id, 'sizeOpts', sizes, val)} 
+            <OptionsSelector
+              label="Talla"
+              options={sizes}
+              selectedValue={itemState.size}
+              onSelect={(val) => updateItemData(itemConfig.id, 'size', val === itemState.size ? '' : val)}
+              onAdd={(val) => addItemOption(itemConfig.id, 'sizeOpts', val)}
+              onRemove={(val) => removeItemOption(itemConfig.id, 'sizeOpts', sizes, val)}
               readOnly={localReadOnly}
             />
           )}
 
           {attrs.includes('type') && (
-            <OptionsSelector 
-              label="Tipo" 
-              options={types} 
-              selectedValue={itemState.type} 
-              onSelect={(val) => updateItemData(itemConfig.id, 'type', val === itemState.type ? '' : val)} 
-              onAdd={(val) => addItemOption(itemConfig.id, 'typeOpts', val)} 
-              onRemove={(val) => removeItemOption(itemConfig.id, 'typeOpts', types, val)} 
+            <OptionsSelector
+              label="Tipo"
+              options={types}
+              selectedValue={itemState.type}
+              onSelect={(val) => updateItemData(itemConfig.id, 'type', val === itemState.type ? '' : val)}
+              onAdd={(val) => addItemOption(itemConfig.id, 'typeOpts', val)}
+              onRemove={(val) => removeItemOption(itemConfig.id, 'typeOpts', types, val)}
               readOnly={localReadOnly}
             />
           )}
 
           {attrs.includes('cut') && (
-            <OptionsSelector 
-              label="Corte / Fit" 
-              options={cuts} 
-              selectedValue={itemState.cut} 
-              onSelect={(val) => updateItemData(itemConfig.id, 'cut', val === itemState.cut ? '' : val)} 
-              onAdd={(val) => addItemOption(itemConfig.id, 'cutOpts', val)} 
-              onRemove={(val) => removeItemOption(itemConfig.id, 'cutOpts', cuts, val)} 
+            <OptionsSelector
+              label="Corte / Fit"
+              options={cuts}
+              selectedValue={itemState.cut}
+              onSelect={(val) => updateItemData(itemConfig.id, 'cut', val === itemState.cut ? '' : val)}
+              onAdd={(val) => addItemOption(itemConfig.id, 'cutOpts', val)}
+              onRemove={(val) => removeItemOption(itemConfig.id, 'cutOpts', cuts, val)}
               readOnly={localReadOnly}
             />
           )}
@@ -157,9 +157,9 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
           {attrs.includes('brands') && (
             <div className="input-group">
               <label>Marca / Fabricante</label>
-              <input 
-                type="text" 
-                placeholder="Ej. Zara, H&M..." 
+              <input
+                type="text"
+                placeholder="Ej. Zara, H&M..."
                 value={itemState.brands || ''}
                 onChange={(e) => updateItemData(itemConfig.id, 'brands', e.target.value)}
                 className="styled-input"
@@ -188,16 +188,16 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
               <GallerySlots itemId={itemConfig.id} />
             </div>
           )}
-          
+
           {isEditing && (
             <div className="accordion-footer" style={{ marginTop: '1.5rem', pointerEvents: 'auto' }}>
-              <button 
+              <button
                 onClick={async (e) => {
                   e.stopPropagation();
                   setIsSaving(true);
                   const success = await saveSingleItemToSupabase(activeZone, itemConfig.id);
                   setIsSaving(false);
-                  if(success) {
+                  if (success) {
                     setIsEditing(false);
                     setJustSaved(true);
                     setTimeout(() => setJustSaved(false), 2000);
@@ -249,12 +249,12 @@ const EditorPanel = () => {
     const saved = localStorage.getItem('saizu_openAccordion');
     return (saved && saved !== 'null' && saved !== 'undefined') ? saved : null;
   });
-  
+
   useEffect(() => {
     if (openAccordion) localStorage.setItem('saizu_openAccordion', openAccordion);
     else localStorage.removeItem('saizu_openAccordion');
   }, [openAccordion]);
-  
+
   // Custom item creator state
   const [isCreating, setIsCreating] = useState(false);
   const [newItemName, setNewItemName] = useState('');
@@ -265,7 +265,7 @@ const EditorPanel = () => {
   const currentSchema = activeZoneSchema || [];
 
   const handleToggleAttr = (attrId) => {
-    setSelectedAttrs(prev => 
+    setSelectedAttrs(prev =>
       prev.includes(attrId) ? prev.filter(x => x !== attrId) : [...prev, attrId]
     );
   };
@@ -274,13 +274,13 @@ const EditorPanel = () => {
     if (!newItemName.trim()) return;
     const baseId = newItemName.trim().toLowerCase().replace(/\s+/g, '-');
     const newId = `${baseId}-${Date.now().toString().slice(-4)}`;
-    
+
     addCustomItem({
       id: newId,
       label: newItemName.trim(),
       attrs: selectedAttrs
     });
-    
+
     setNewItemName('');
     setIsCreating(false);
     setOpenAccordion(newId);
@@ -297,8 +297,8 @@ const EditorPanel = () => {
           )}
           <h2 className="editor-title">{zoneTranslations[activeZone]}</h2>
         </div>
-        <button 
-          className="close-btn" 
+        <button
+          className="close-btn"
           onClick={() => setActiveZone(null)}
           aria-label="Cerrar Panel"
           title="Ver Maniquí Completo"
@@ -311,7 +311,7 @@ const EditorPanel = () => {
         {!viewingFriend && !activeProfileId && (
           <p style={{
             fontSize: '0.8rem',
-            color: 'rgba(255,255,255,0.4)',
+            color: 'rgba(255, 0, 0, 1)',
             textAlign: 'center',
             padding: '0.5rem 0'
           }}>
@@ -325,9 +325,9 @@ const EditorPanel = () => {
             </button>
           ) : (
             <div className="creation-form">
-              <input 
-                type="text" 
-                className="styled-input" 
+              <input
+                type="text"
+                className="styled-input"
                 placeholder="Nombre de prenda (Ej: Bufanda)"
                 value={newItemName}
                 onChange={e => setNewItemName(e.target.value)}
@@ -337,8 +337,8 @@ const EditorPanel = () => {
               <div className="attr-checkboxes">
                 {PRESET_ATTRS.map(attr => (
                   <label key={attr.id} className="attr-label">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={selectedAttrs.includes(attr.id)}
                       onChange={() => handleToggleAttr(attr.id)}
                     />
@@ -356,19 +356,19 @@ const EditorPanel = () => {
           )
         )}
       </div>
-      
+
       <div className="accordion-list">
         {currentSchema.map(itemConf => (
-          <AccordionItem 
-            key={itemConf.id} 
-            itemConfig={itemConf} 
+          <AccordionItem
+            key={itemConf.id}
+            itemConfig={itemConf}
             isOpen={openAccordion === itemConf.id}
-            onClick={() => setOpenAccordion(openAccordion === itemConf.id ? null : itemConf.id)} 
+            onClick={() => setOpenAccordion(openAccordion === itemConf.id ? null : itemConf.id)}
             onDelete={deleteCustomItem}
             viewingFriend={viewingFriend}
           />
         ))}
-        {currentSchema.length === 0 && <p style={{opacity: 0.5}}>No hay categorías definidas aún.</p>}
+        {currentSchema.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center' }}>No hay categorías definidas aún.</p>}
       </div>
     </div>
   );
