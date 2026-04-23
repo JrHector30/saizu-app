@@ -13,12 +13,12 @@ const CameraAnimator = memo(({ activeZone }) => {
     const ctrl = controlsRef.current;
 
     switch (activeZone) {
-      case 'head':   ctrl.setLookAt(0, 1.9, 1.5,  0, 1.9,  0, true); break;
-      case 'torso':  ctrl.setLookAt(0, 0.6, 2.8,  0, 0.6,  0, true); break;
-      case 'hands':  ctrl.setLookAt(-1.0, 0.2, 2, -0.6, 0.2, 0, true); break;
-      case 'legs':   ctrl.setLookAt(0, -0.5, 3,   0, -0.5, 0, true); break;
-      case 'feet':   ctrl.setLookAt(0, -1.3, 2,   0, -1.3, 0, true); break;
-      default:       ctrl.setLookAt(0, 0.4, 6,    0, 0.4,  0, true); break;
+      case 'head': ctrl.setLookAt(0, 1.9, 1.5, 0, 1.9, 0, true); break;
+      case 'torso': ctrl.setLookAt(0, 0.6, 2.8, 0, 0.6, 0, true); break;
+      case 'hands': ctrl.setLookAt(-1.0, 0.2, 2, -0.6, 0.2, 0, true); break;
+      case 'legs': ctrl.setLookAt(0, -0.5, 3, 0, -0.5, 0, true); break;
+      case 'feet': ctrl.setLookAt(0, -1.3, 2, 0, -1.3, 0, true); break;
+      default: ctrl.setLookAt(0, 0.4, 6, 0, 0.4, 0, true); break;
     }
   }, [activeZone]);
 
@@ -45,8 +45,10 @@ const RenderMannequin = () => {
     };
   }, []); // Solo se registra una vez al montar
 
-  const isFemale = activeOutfit === 'ELLA';
-  const modelUrl = isFemale ? '/models/mujer/scene.gltf' : '/models/hombre/scene.gltf';
+  // Si estamos viendo a un amigo, usar SU género. Si no, usar el propio.
+  const displayMode = viewingFriend ? viewingFriend.mode : activeOutfit;
+  const isFemale = displayMode === 'ELLA';
+  const modelUrl = isFemale ? 'public/models/mujer/scene.gltf' : 'public/models/hombre/scene.gltf';
 
   return (
     <div className="render-container" style={{ pointerEvents: 'auto' }}>
@@ -74,7 +76,7 @@ const RenderMannequin = () => {
 
       {!activeZone && (
         <div className="hotspots-layer" style={{ pointerEvents: 'none' }}>
-          <div className="hotspot" style={{ top: '5%',  left: '40%', width: '20%', height: '15%', pointerEvents: 'auto' }} onClick={() => setActiveZone('head')} />
+          <div className="hotspot" style={{ top: '5%', left: '40%', width: '20%', height: '15%', pointerEvents: 'auto' }} onClick={() => setActiveZone('head')} />
           <div className="hotspot" style={{ top: '20%', left: '35%', width: '30%', height: '30%', pointerEvents: 'auto' }} onClick={() => setActiveZone('torso')} />
           <div className="hotspot" style={{ top: '22%', left: '25%', width: '10%', height: '30%', pointerEvents: 'auto' }} onClick={() => setActiveZone('hands')} />
           <div className="hotspot" style={{ top: '22%', left: '65%', width: '10%', height: '30%', pointerEvents: 'auto' }} onClick={() => setActiveZone('hands')} />
