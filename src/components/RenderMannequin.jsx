@@ -48,7 +48,7 @@ const RenderMannequin = () => {
   // Si estamos viendo a un amigo, usar SU género. Si no, usar el propio.
   const displayMode = viewingFriend ? viewingFriend.mode : activeOutfit;
   const isFemale = displayMode === 'ELLA';
-  const modelUrl = isFemale ? 'public/models/mujer/scene.gltf' : 'public/models/hombre/scene.gltf';
+  const modelUrl = isFemale ? '/models/mujer/scene.gltf' : '/models/hombre/scene.gltf';
 
   return (
     <div className="render-container" style={{ pointerEvents: 'auto' }}>
