@@ -43,17 +43,17 @@ const Onboarding = () => {
     };
 
     const selectProfile = async (outfit) => {
+        // Guard: nunca guardar sin género válido
+        if (outfit !== 'ÉL' && outfit !== 'ELLA') return;
+
         setLoading(true);
         try {
-            const { error } = await supabase.from('user_profiles').insert({
-                owner_id: session.user.id,
-                outfit_mode: outfit,
-                profile_name: 'Armario Principal',
-                saizu_id: generateSaizuId()
-            });
+            const { error } = await supabase
+                .from('user_profiles')
+                .update({ outfit_mode: outfit })
+                .eq('owner_id', session.user.id);
 
             if (error) throw error;
-
             await refreshProfile();
         } catch (err) {
             console.error("Error creating profile:", err);

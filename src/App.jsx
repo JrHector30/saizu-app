@@ -23,7 +23,7 @@ function MainInterface() {
     <div className="main-wrapper">
       <RenderMannequin />
 
-      {loading ? null : !profile ? (
+      {loading ? null : (!profile || !profile.outfit_mode) ? (
         <Onboarding />
       ) : (
         <div className="ui-layer">
