@@ -19,12 +19,11 @@ const Login = () => {
                 if (error) throw error;
 
                 if (data?.user) {
-                    await supabase.from('user_profiles').upsert({
+                    await supabase.from('user_profiles').insert({
                         owner_id: data.user.id,
                         profile_name: displayName.trim() || 'Sin Nombre',
-                        outfit_mode: 'ÉL',
                         saizu_id: `SAI-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
-                    }, { onConflict: 'owner_id', ignoreDuplicates: false });
+                    });
                 }
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });
