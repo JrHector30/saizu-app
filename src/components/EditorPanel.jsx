@@ -3,7 +3,7 @@ import { useSuitcase } from '../context/SuitcaseContext';
 import GallerySlots from './GallerySlots';
 import ColorSwatchPicker from './ColorSwatchPicker';
 import PatternPicker from './PatternPicker';
-import { X, ChevronDown, ChevronUp, Trash2, Plus, Check, Pencil } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Trash2, Plus, Check, Pencil, ExternalLink } from 'lucide-react';
 
 const zoneTranslations = {
   head: 'Cabeza y Rostro',
@@ -76,8 +76,19 @@ const OptionsSelector = ({ label, options, selectedValue, onSelect, onAdd, onRem
   )
 }
 
+const PRESET_ATTRS = [
+  { id: 'size', label: 'Talla' },
+  { id: 'type', label: 'Tipo' },
+  { id: 'cut', label: 'Corte/Fit' },
+  { id: 'brands', label: 'Marca/Fabricante' },
+  { id: 'colors', label: 'Colores Preferidos' },
+  { id: 'patterns', label: 'Patrones/Diseño' },
+  { id: 'gallery', label: 'Fotos de Referencia' },
+  { id: 'product_url', label: 'URL del Producto' }
+];
+
 const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend }) => {
-  const { activeZoneData, updateItemData, addItemOption, removeItemOption, saveSingleItemToSupabase, activeZone } = useSuitcase();
+  const { activeZoneData, updateItemData, addItemOption, removeItemOption, saveSingleItemToSupabase, activeZone, updateItemSchemaAttrs } = useSuitcase();
   const itemState = activeZoneData[itemConfig.id];
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -90,7 +101,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
   const sizes = itemConfig.sizeOpts || defaultOptions.size;
   const types = itemConfig.typeOpts || defaultOptions.type;
   const cuts = itemConfig.cutOpts || defaultOptions.cut;
-  const attrs = itemConfig.attrs || ['size', 'type', 'cut', 'brands', 'colors', 'patterns', 'gallery'];
+  const attrs = itemConfig.attrs || ['size', 'type', 'cut', 'brands', 'colors', 'patterns', 'gallery', 'product_url'];
 
   return (
     <div className={`accordion-item ${isOpen ? 'open' : ''}`}>
@@ -189,6 +200,49 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             </div>
           )}
 
+          {attrs.includes('product_url') && (
+            <div className="input-group">
+              <label>URL del Producto</label>
+              {viewingFriend && itemState.product_url ? (
+                <a href={itemState.product_url} target="_blank" rel="noopener noreferrer" className="styled-input" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#4ade80', justifyContent: 'center'}}>
+                  <ExternalLink size={16} /> Ver en tienda
+                </a>
+              ) : (
+                <input 
+                  type="text" 
+                  placeholder="Ej. https://www.adidas.com/..." 
+                  value={itemState.product_url || ''}
+                  onChange={(e) => updateItemData(itemConfig.id, 'product_url', e.target.value)}
+                  className="styled-input"
+                  readOnly={localReadOnly}
+                />
+              )}
+            </div>
+          )}
+          
+          {isEditing && (
+            <div className="input-group" style={{marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px'}}>
+              <label>Campos Habilitados (Estructura de la prenda)</label>
+              <div className="attr-checkboxes">
+                {PRESET_ATTRS.map(attr => (
+                  <label key={attr.id} className="attr-label" style={{opacity: 1}}>
+                    <input 
+                      type="checkbox" 
+                      checked={attrs.includes(attr.id)}
+                      onChange={() => {
+                        const newAttrs = attrs.includes(attr.id) 
+                            ? attrs.filter(a => a !== attr.id) 
+                            : [...attrs, attr.id];
+                        updateItemSchemaAttrs(itemConfig.id, newAttrs);
+                      }}
+                    />
+                    {attr.label}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
           {isEditing && (
             <div className="accordion-footer" style={{ marginTop: '1.5rem', pointerEvents: 'auto' }}>
               <button
@@ -231,16 +285,6 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
     </div>
   );
 };
-
-const PRESET_ATTRS = [
-  { id: 'size', label: 'Talla' },
-  { id: 'type', label: 'Tipo' },
-  { id: 'cut', label: 'Corte/Fit' },
-  { id: 'brands', label: 'Marca/Fabricante' },
-  { id: 'colors', label: 'Colores Preferidos' },
-  { id: 'patterns', label: 'Patrones/Diseño' },
-  { id: 'gallery', label: 'Fotos de Referencia' }
-];
 
 const EditorPanel = () => {
   const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, addCustomItem, deleteCustomItem, viewingFriend, activeProfileId } = useSuitcase();

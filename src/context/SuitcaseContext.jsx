@@ -154,7 +154,7 @@ export const SuitcaseProvider = ({ children }) => {
       ...prev,
       [activeZone]: {
         ...prev[activeZone],
-        [newItemSchema.id]: { size: '', type: '', cut: '', brands: '', colors: [], patterns: [], gallery: [] }
+        [newItemSchema.id]: { size: '', type: '', cut: '', brands: '', colors: [], patterns: [], gallery: [], product_url: '' }
       }
     }));
   };
@@ -245,6 +245,18 @@ export const SuitcaseProvider = ({ children }) => {
         updateItemData(itemId, field, '');
       }
     }
+  };
+
+  const updateItemSchemaAttrs = (itemId, newAttrs) => {
+    if (!activeZone) return;
+    setInventorySchema(prev => {
+      const cloned = { ...prev };
+      cloned[activeZone] = cloned[activeZone].map(item => {
+        if (item.id === itemId) return { ...item, attrs: newAttrs };
+        return item;
+      });
+      return cloned;
+    });
   };
 
   const addGlobalColor = (name, hex) => {
@@ -405,7 +417,8 @@ export const SuitcaseProvider = ({ children }) => {
             type: row.extra_details?.type || '',
             colors: Array.isArray(row.extra_details?.colors) ? row.extra_details.colors : [],
             patterns: Array.isArray(row.extra_details?.patterns) ? row.extra_details.patterns : [],
-            gallery
+            gallery,
+            product_url: row.product_url || ''
           };
 
           // Draft tiene prioridad sobre BD para el item específico
@@ -511,6 +524,7 @@ export const SuitcaseProvider = ({ children }) => {
         size_value: item.size || null,
         brand: item.brands || null,
         image_urls: item.gallery || [],
+        product_url: item.product_url || null,
         extra_details: {
           cut: item.cut,
           type: item.type,
@@ -578,6 +592,7 @@ export const SuitcaseProvider = ({ children }) => {
               size_value: item.size,
               brand: item.brands,
               image_urls: item.gallery,
+              product_url: item.product_url || null,
               extra_details: {
                 cut: item.cut,
                 type: item.type,
@@ -637,6 +652,7 @@ export const SuitcaseProvider = ({ children }) => {
         saveSingleItemToSupabase,
         viewingFriend,
         setViewingFriend,
+        updateItemSchemaAttrs,
         // Profiles Exposes
         profilesList,
         activeProfileId,
