@@ -3,7 +3,7 @@ import { useSuitcase } from '../context/SuitcaseContext';
 import GallerySlots from './GallerySlots';
 import ColorSwatchPicker from './ColorSwatchPicker';
 import PatternPicker from './PatternPicker';
-import { X, ChevronDown, ChevronUp, Trash2, Plus, Check, Pencil, ExternalLink } from 'lucide-react';
+import { X, ChevronDown, ChevronUp, Trash2, Plus, Check, Pencil, ExternalLink, Search } from 'lucide-react';
 
 const zoneTranslations = {
   head: 'Cabeza y Rostro',
@@ -287,7 +287,7 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
 };
 
 const EditorPanel = () => {
-  const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, addCustomItem, deleteCustomItem, viewingFriend, activeProfileId } = useSuitcase();
+  const { activeOutfit, activeZone, setActiveZone, activeZoneSchema, activeZoneData, addCustomItem, deleteCustomItem, viewingFriend, activeProfileId } = useSuitcase();
   const friendName = viewingFriend?.profile_name || viewingFriend?.saizu_id || null;
   const [openAccordion, setOpenAccordion] = useState(() => {
     const saved = localStorage.getItem('saizu_openAccordion');
@@ -303,10 +303,27 @@ const EditorPanel = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [selectedAttrs, setSelectedAttrs] = useState([]);
+  
+  // Search state
+  const [searchTerm, setSearchTerm] = useState('');
 
   if (!activeZone) return null;
 
   const currentSchema = activeZoneSchema || [];
+
+  // Lógica de Filtrado Live
+  const filteredSchema = currentSchema.filter(itemConf => {
+    if (!searchTerm.trim()) return true;
+    const term = searchTerm.toLowerCase().trim();
+    const matchLabel = itemConf.label.toLowerCase().includes(term);
+    
+    // Buscar también en la marca usando activeZoneData
+    const itemData = activeZoneData ? activeZoneData[itemConf.id] : null;
+    const itemBrand = itemData?.brands ? itemData.brands.toLowerCase() : '';
+    const matchBrand = itemBrand.includes(term);
+
+    return matchLabel || matchBrand;
+  });
 
   const handleToggleAttr = (attrId) => {
     setSelectedAttrs(prev =>
@@ -350,6 +367,43 @@ const EditorPanel = () => {
           <X size={24} strokeWidth={1.5} />
         </button>
       </div>
+
+      {currentSchema.length > 0 && (
+        <div style={{ padding: '0 1.5rem', marginBottom: '1rem' }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            background: 'rgba(255,255,255,0.05)',
+            borderRadius: '8px',
+            padding: '0.5rem 1rem',
+            gap: '0.5rem'
+          }}>
+            <Search size={16} color="rgba(255,255,255,0.5)" />
+            <input 
+              type="text" 
+              placeholder="Buscar por nombre o marca..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'white',
+                width: '100%',
+                outline: 'none',
+                fontSize: '0.9rem'
+              }}
+            />
+            {searchTerm && (
+              <X 
+                size={16} 
+                color="rgba(255,255,255,0.5)" 
+                style={{ cursor: 'pointer' }}
+                onClick={() => setSearchTerm('')} 
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="custom-item-creator">
         {!viewingFriend && !activeProfileId && (
@@ -402,7 +456,7 @@ const EditorPanel = () => {
       </div>
 
       <div className="accordion-list">
-        {currentSchema.map(itemConf => (
+        {filteredSchema.map(itemConf => (
           <AccordionItem
             key={itemConf.id}
             itemConfig={itemConf}
@@ -413,6 +467,9 @@ const EditorPanel = () => {
           />
         ))}
         {currentSchema.length === 0 && <p style={{ opacity: 0.5, textAlign: 'center' }}>No hay categorías definidas aún.</p>}
+        {currentSchema.length > 0 && filteredSchema.length === 0 && searchTerm && (
+          <p style={{ opacity: 0.5, textAlign: 'center', fontSize: '0.85rem' }}>No hay coincidencias para tu búsqueda.</p>
+        )}
       </div>
     </div>
   );
