@@ -203,8 +203,8 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
           {attrs.includes('product_url') && (
             <div className="input-group">
               <label>URL del Producto</label>
-              {viewingFriend && itemState.product_url ? (
-                <a href={itemState.product_url} target="_blank" rel="noopener noreferrer" className="styled-input" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#4ade80', justifyContent: 'center'}}>
+              {!isEditing && itemState.product_url ? (
+                <a href={itemState.product_url} target="_blank" rel="noopener noreferrer" className="styled-input" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#4ade80', justifyContent: 'center', pointerEvents: 'auto'}}>
                   <ExternalLink size={16} /> Ver en tienda
                 </a>
               ) : (
