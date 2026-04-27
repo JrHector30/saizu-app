@@ -370,34 +370,23 @@ const EditorPanel = () => {
 
       {currentSchema.length > 0 && (
         <div style={{ padding: '0 1.5rem', marginBottom: '1rem' }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            background: 'rgba(255,255,255,0.05)',
-            borderRadius: '8px',
-            padding: '0.5rem 1rem',
-            gap: '0.5rem'
-          }}>
-            <Search size={16} color="rgba(255,255,255,0.5)" />
+          <div className="input-group" style={{ position: 'relative' }}>
+            <Search 
+              size={16} 
+              style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }} 
+            />
             <input 
               type="text" 
               placeholder="Buscar por nombre o marca..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'white',
-                width: '100%',
-                outline: 'none',
-                fontSize: '0.9rem'
-              }}
+              className="styled-input"
+              style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
             />
             {searchTerm && (
               <X 
                 size={16} 
-                color="rgba(255,255,255,0.5)" 
-                style={{ cursor: 'pointer' }}
+                style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.5 }}
                 onClick={() => setSearchTerm('')} 
               />
             )}
