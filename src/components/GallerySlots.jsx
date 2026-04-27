@@ -86,7 +86,14 @@ const GallerySlots = ({ itemId }) => {
     if (!file || isReadOnly) return;
 
     try {
-      const { blob } = await convertToWebP(file, 0.85);
+      // Usamos el default de quality=0.75 del imageOptimizer
+      const { blob } = await convertToWebP(file);
+      
+      console.log(`🖼️ [Optimización de Imagen]`);
+      console.log(`- Original: ${(file.size / 1024).toFixed(2)} KB`);
+      console.log(`- Optimizado: ${(blob.size / 1024).toFixed(2)} KB`);
+      console.log(`- Reducción: ${(((file.size - blob.size) / file.size) * 100).toFixed(1)}%`);
+
       const { data: { user } } = await supabase.auth.getUser();
       const ownerId = user?.id || 'unknown';
       const fileName = `${ownerId}/${Date.now()}_${Math.random().toString(36).substring(7)}.webp`;

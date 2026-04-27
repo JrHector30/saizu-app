@@ -2,20 +2,28 @@
  * Utility for client-side image optimization to WebP.
  * It reads a File, draws it into a canvas, and outputs a WebP Blob or base64.
  */
-export const convertToWebP = (file, quality = 0.8) => {
+export const convertToWebP = (file, quality = 0.75) => {
   return new Promise((resolve, reject) => {
     if (!file) return reject(new Error('No file provided'));
+
+    // COMPATIBILIDAD HEIC: 
+    // iPhones usan HEIC. En Safari/iOS modernos se leen/convierten internamente al subir en el input.
+    // Para dar soporte perfecto en todos los navegadores requeriría 'heic2any', pero con 'image/*'
+    // en GallerySlots nos aseguramos que entren y el navegador las ofrezca como JPG/PNG si las soporta.
 
     const reader = new FileReader();
     reader.onload = (e) => {
       const img = new Image();
+      // Asegurar que respete la orientación EXIF de fotos móviles (iPhone)
+      img.style.imageOrientation = "from-image";
+      
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // Optional: limit max dimensions for performance and consistency
-        const MAX_WIDTH = 1200;
-        const MAX_HEIGHT = 1200;
+        // Ultra optimización para móviles
+        const MAX_WIDTH = 1000;
+        const MAX_HEIGHT = 1000;
         let width = img.width;
         let height = img.height;
 
