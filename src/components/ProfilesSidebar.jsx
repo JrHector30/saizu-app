@@ -42,23 +42,23 @@ const ProfilesSidebar = () => {
       {/* ===== VERSIÓN PC: sidebar vertical ===== */}
       <div className="sidebar-desktop">
 
-        {/* Botón colapsar/expandir */}
-        <button
-          className="sidebar-collapse-btn"
-          onClick={() => setIsCollapsed(prev => !prev)}
-          title={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-        >
-          {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-        </button>
-
-        {/* Título — solo visible cuando expandido */}
-        {!isCollapsed && (
-          <h2 className="sidebar-title">
-            {viewingFriend
-              ? `Armario de ${viewingFriend.profile_name || viewingFriend.saizu_id}`
-              : 'Mis Outfits'}
-          </h2>
-        )}
+        {/* Header del sidebar: título + botón colapsar en la misma fila */}
+        <div className="sidebar-header-row">
+          {!isCollapsed && (
+            <h2 className="sidebar-title">
+              {viewingFriend
+                ? `Armario de ${viewingFriend.profile_name || viewingFriend.saizu_id}`
+                : 'Mis Outfits'}
+            </h2>
+          )}
+          <button
+            className="sidebar-collapse-btn"
+            onClick={() => setIsCollapsed(prev => !prev)}
+            title={isCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+          >
+            {isCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+        </div>
 
         <div className="profiles-list">
           {profilesList.map(profile => {
