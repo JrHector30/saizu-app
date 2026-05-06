@@ -204,13 +204,13 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
             <div className="input-group">
               <label>URL del Producto</label>
               {!isEditing && itemState.product_url ? (
-                <a href={itemState.product_url} target="_blank" rel="noopener noreferrer" className="styled-input" style={{display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#4ade80', justifyContent: 'center', pointerEvents: 'auto'}}>
+                <a href={itemState.product_url} target="_blank" rel="noopener noreferrer" className="styled-input" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none', color: '#4ade80', justifyContent: 'center', pointerEvents: 'auto' }}>
                   <ExternalLink size={16} /> Ver en tienda
                 </a>
               ) : (
-                <input 
-                  type="text" 
-                  placeholder="Ej. https://www.adidas.com/..." 
+                <input
+                  type="text"
+                  placeholder="Ej. https://www.adidas.com/..."
                   value={itemState.product_url || ''}
                   onChange={(e) => updateItemData(itemConfig.id, 'product_url', e.target.value)}
                   className="styled-input"
@@ -219,20 +219,20 @@ const AccordionItem = ({ itemConfig, isOpen, onClick, onDelete, viewingFriend })
               )}
             </div>
           )}
-          
+
           {isEditing && (
-            <div className="input-group" style={{marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px'}}>
+            <div className="input-group" style={{ marginTop: '1rem', padding: '1rem', background: 'rgba(255,255,255,0.05)', borderRadius: '8px' }}>
               <label>Campos Habilitados (Estructura de la prenda)</label>
               <div className="attr-checkboxes">
                 {PRESET_ATTRS.map(attr => (
-                  <label key={attr.id} className="attr-label" style={{opacity: 1}}>
-                    <input 
-                      type="checkbox" 
+                  <label key={attr.id} className="attr-label" style={{ opacity: 1 }}>
+                    <input
+                      type="checkbox"
                       checked={attrs.includes(attr.id)}
                       onChange={() => {
-                        const newAttrs = attrs.includes(attr.id) 
-                            ? attrs.filter(a => a !== attr.id) 
-                            : [...attrs, attr.id];
+                        const newAttrs = attrs.includes(attr.id)
+                          ? attrs.filter(a => a !== attr.id)
+                          : [...attrs, attr.id];
                         updateItemSchemaAttrs(itemConfig.id, newAttrs);
                       }}
                     />
@@ -303,7 +303,7 @@ const EditorPanel = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [newItemName, setNewItemName] = useState('');
   const [selectedAttrs, setSelectedAttrs] = useState([]);
-  
+
   // Search state
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -316,7 +316,7 @@ const EditorPanel = () => {
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase().trim();
     const matchLabel = itemConf.label.toLowerCase().includes(term);
-    
+
     // Buscar también en la marca usando activeZoneData
     const itemData = activeZoneData ? activeZoneData[itemConf.id] : null;
     const itemBrand = itemData?.brands ? itemData.brands.toLowerCase() : '';
@@ -371,23 +371,23 @@ const EditorPanel = () => {
       {currentSchema.length > 0 && (
         <div style={{ padding: '0 1.5rem', marginBottom: '1rem' }}>
           <div className="input-group" style={{ position: 'relative' }}>
-            <Search 
-              size={16} 
-              style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }} 
+            <Search
+              size={16}
+              style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }}
             />
-            <input 
-              type="text" 
+            <input
+              type="text"
               placeholder="Buscar por nombre o marca..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="styled-input"
-              style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+              style={{ paddingLeft: '2.5rem' }}
             />
             {searchTerm && (
-              <X 
-                size={16} 
+              <X
+                size={16}
                 style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', cursor: 'pointer', opacity: 0.5 }}
-                onClick={() => setSearchTerm('')} 
+                onClick={() => setSearchTerm('')}
               />
             )}
           </div>

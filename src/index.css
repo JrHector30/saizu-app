@@ -1126,11 +1126,19 @@ h6 {
   flex-direction: column;
   height: 100%;
   padding: 2rem 1.5rem;
+  background: #ffffff12;
+  border: 1px solid #ffffff26;
+  border-radius: var(--radius-md);
 }
 
 .profiles-sidebar.collapsed .sidebar-desktop {
-  padding: 2rem 0.75rem;
+  padding: 1rem 0.5rem;
   align-items: center;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  margin: 0;
+  height: 100%;
 }
 
 /* Botón colapsar */
@@ -1144,7 +1152,6 @@ h6 {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 1.5rem;
   transition: all 0.2s ease;
   align-self: flex-end;
 }
@@ -1156,7 +1163,7 @@ h6 {
 
 .sidebar-title {
   font-family: var(--font-title);
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   color: #fff;
   margin-bottom: 2rem;
   text-transform: uppercase;
