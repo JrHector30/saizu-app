@@ -50,8 +50,10 @@ const Onboarding = () => {
         try {
             const { error } = await supabase
                 .from('user_profiles')
-                .update({ outfit_mode: outfit })
-                .eq('owner_id', session.user.id);
+                .upsert({
+                    owner_id: session.user.id,
+                    outfit_mode: outfit
+                }, { onConflict: 'owner_id' });
 
             if (error) throw error;
             await refreshProfile();

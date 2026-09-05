@@ -874,6 +874,60 @@ h6 {
   letter-spacing: 0.05em;
 }
 
+/* Botón Continuar con Google */
+.login-google-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.9rem 1.25rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #111111;
+  background-color: #FFFFFF;
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.login-google-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.25);
+  background-color: #f8f8f8;
+}
+
+.login-google-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+/* Divisor estético entre Google y Email */
+.login-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: var(--font-body);
+}
+
+.login-divider::before,
+.login-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
 .login-form {
   display: flex;
   flex-direction: column;

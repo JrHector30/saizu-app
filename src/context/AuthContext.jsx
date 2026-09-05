@@ -10,15 +10,35 @@ export const AuthProvider = ({ children }) => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchProfile = async (userId) => {
+  const fetchProfile = async (userId, userMetadata = null) => {
     try {
-      const { data, error } = await supabase
+      let { data, error } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('owner_id', userId)
-        .single();
+        .maybeSingle();
 
-      if (!error && data) {
+      // Si no existe perfil (ej. nuevo usuario que entra por Google OAuth)
+      if (!data && userMetadata) {
+        const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+        const googleName = userMetadata.full_name || userMetadata.name || userMetadata.user_name || 'Usuario';
+        const newProfile = {
+          owner_id: userId,
+          profile_name: googleName,
+          saizu_id: `SAI-${randomHex}`
+        };
+        const { data: created, error: insertError } = await supabase
+          .from('user_profiles')
+          .insert(newProfile)
+          .select()
+          .maybeSingle();
+
+        if (!insertError && created) {
+          data = created;
+        }
+      }
+
+      if (data) {
         let updates = {};
         if (!data.saizu_id) {
           const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
@@ -42,7 +62,7 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session?.user) {
-        fetchProfile(session.user.id).then(() => setLoading(false));
+        fetchProfile(session.user.id, session.user.user_metadata).then(() => setLoading(false));
       } else {
         setLoading(false);
       }
@@ -52,7 +72,7 @@ export const AuthProvider = ({ children }) => {
       setSession(session);
       if (session?.user) {
         setLoading(true);
-        fetchProfile(session.user.id).then(() => setLoading(false));
+        fetchProfile(session.user.id, session.user.user_metadata).then(() => setLoading(false));
       } else {
         setProfile(null);
         setLoading(false);
@@ -64,7 +84,7 @@ export const AuthProvider = ({ children }) => {
 
   // Update profile from components (e.g. after onboarding completion)
   const refreshProfile = async () => {
-    if (session?.user) await fetchProfile(session.user.id);
+    if (session?.user) await fetchProfile(session.user.id, session.user.user_metadata);
   };
 
   return (
