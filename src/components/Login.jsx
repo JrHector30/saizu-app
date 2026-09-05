@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { Eye, EyeOff } from 'lucide-react';
 
@@ -14,13 +14,65 @@ const GoogleIcon = () => (
 const Login = () => {
     const [loading, setLoading] = useState(false);
     const [googleLoading, setGoogleLoading] = useState(false);
+    const [gsiReady, setGsiReady] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [displayName, setDisplayName] = useState('');
+    const googleBtnRef = useRef(null);
 
-    const handleGoogleAuth = async () => {
+    const handleGoogleCredential = async (response) => {
+        setGoogleLoading(true);
+        try {
+            const { error } = await supabase.auth.signInWithIdToken({
+                provider: 'google',
+                token: response.credential
+            });
+            if (error) throw error;
+        } catch (error) {
+            alert(error.error_description || error.message);
+            setGoogleLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '1083020134665-bgofq4riro7e9lh577de8d3ugb9tuhjf.apps.googleusercontent.com';
+        
+        const initGsi = () => {
+            if (window.google?.accounts?.id && googleBtnRef.current) {
+                window.google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: handleGoogleCredential,
+                    auto_select: false,
+                });
+                googleBtnRef.current.innerHTML = '';
+                window.google.accounts.id.renderButton(googleBtnRef.current, {
+                    theme: 'filled_black',
+                    size: 'large',
+                    type: 'standard',
+                    shape: 'pill',
+                    text: isSignUp ? 'signup_with' : 'signin_with',
+                    width: Math.min(360, window.innerWidth - 64),
+                    logo_alignment: 'left'
+                });
+                setGsiReady(true);
+            }
+        };
+
+        initGsi();
+
+        const interval = setInterval(() => {
+            if (window.google?.accounts?.id) {
+                initGsi();
+                clearInterval(interval);
+            }
+        }, 300);
+
+        return () => clearInterval(interval);
+    }, [isSignUp]);
+
+    const handleGoogleAuthFallback = async () => {
         setGoogleLoading(true);
         try {
             const { error } = await supabase.auth.signInWithOAuth({
@@ -79,16 +131,25 @@ const Login = () => {
             <div className="login-container">
                 <h1 className="login-title">ログイン — LOGIN</h1>
 
-                {/* Botón Google OAuth */}
-                <button
-                    type="button"
-                    className="login-google-btn"
-                    onClick={handleGoogleAuth}
-                    disabled={googleLoading || loading}
-                >
-                    <GoogleIcon />
-                    <span>{googleLoading ? 'Conectando con Google...' : 'Continuar con Google'}</span>
-                </button>
+                {/* Contenedor del Botón Nativo Oficial de Google (Popup sin dominios raros) */}
+                <div 
+                    ref={googleBtnRef} 
+                    className="google-btn-slot" 
+                    style={{ display: gsiReady ? 'flex' : 'none' }}
+                />
+
+                {/* Fallback si el script nativo de Google tarda o es bloqueado */}
+                {!gsiReady && (
+                    <button
+                        type="button"
+                        className="login-google-btn"
+                        onClick={handleGoogleAuthFallback}
+                        disabled={googleLoading || loading}
+                    >
+                        <GoogleIcon />
+                        <span>{googleLoading ? 'Conectando con Google...' : 'Continuar con Google'}</span>
+                    </button>
+                )}
 
                 {/* Divisor estético */}
                 <div className="login-divider">

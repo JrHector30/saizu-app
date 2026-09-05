@@ -874,6 +874,21 @@ h6 {
   letter-spacing: 0.05em;
 }
 
+/* Contenedor del botón nativo de Google */
+.google-btn-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 46px;
+  overflow: hidden;
+  border-radius: 999px;
+}
+
+.google-btn-slot iframe {
+  margin: 0 auto !important;
+}
+
 /* Botón Continuar con Google */
 .login-google-btn {
   display: flex;
