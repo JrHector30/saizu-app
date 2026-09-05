@@ -97,11 +97,24 @@ const Login = () => {
                 if (error) throw error;
 
                 if (data?.user) {
-                    await supabase.from('user_profiles').upsert({
-                        owner_id: data.user.id,
-                        profile_name: displayName.trim() || 'Sin Nombre',
-                        saizu_id: `SAI-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
-                    }, { onConflict: 'owner_id' });
+                    const { data: existing } = await supabase
+                        .from('user_profiles')
+                        .select('id')
+                        .eq('owner_id', data.user.id)
+                        .maybeSingle();
+
+                    if (existing) {
+                        await supabase
+                            .from('user_profiles')
+                            .update({ profile_name: displayName.trim() || 'Sin Nombre' })
+                            .eq('owner_id', data.user.id);
+                    } else {
+                        await supabase.from('user_profiles').insert({
+                            owner_id: data.user.id,
+                            profile_name: displayName.trim() || 'Sin Nombre',
+                            saizu_id: `SAI-${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+                        });
+                    }
                 }
             } else {
                 const { error } = await supabase.auth.signInWithPassword({ email, password });

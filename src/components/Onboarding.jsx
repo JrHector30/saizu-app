@@ -48,18 +48,40 @@ const Onboarding = () => {
 
         setLoading(true);
         try {
-            const { error } = await supabase
+            // Verificar si el perfil ya fue creado en user_profiles
+            const { data: existingProfile } = await supabase
                 .from('user_profiles')
-                .upsert({
-                    owner_id: session.user.id,
-                    outfit_mode: outfit
-                }, { onConflict: 'owner_id' });
+                .select('id, owner_id')
+                .eq('owner_id', session.user.id)
+                .maybeSingle();
 
-            if (error) throw error;
+            if (existingProfile) {
+                const { error: updateErr } = await supabase
+                    .from('user_profiles')
+                    .update({ outfit_mode: outfit })
+                    .eq('owner_id', session.user.id);
+                if (updateErr) throw updateErr;
+            } else {
+                const randomHex = Math.random().toString(36).substring(2, 6).toUpperCase();
+                const userName = session.user?.user_metadata?.full_name || 
+                                 session.user?.user_metadata?.name || 
+                                 session.user?.email?.split('@')[0] || 
+                                 'Usuario';
+                const { error: insertErr } = await supabase
+                    .from('user_profiles')
+                    .insert({
+                        owner_id: session.user.id,
+                        profile_name: userName,
+                        outfit_mode: outfit,
+                        saizu_id: `SAI-${randomHex}`
+                    });
+                if (insertErr) throw insertErr;
+            }
+
             await refreshProfile();
         } catch (err) {
             console.error("Error creating profile:", err);
-            alert("Hubo un problema al crear tu perfil.");
+            alert("Hubo un problema al crear tu perfil: " + (err.message || 'Error desconocido'));
             setLoading(false);
         }
     };
